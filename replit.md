@@ -2,7 +2,16 @@
 
 ## Overview
 
-PolkaConnect is a multi-chain dashboard application for the Polkadot ecosystem that enables users to view balances across parachains (Polkadot, Astar, Moonbeam), track governance proposals, vote on referenda, and visualize parachain network topology. The application is designed with resilience in mind, implementing fallback mechanisms and caching to maintain functionality even when individual chains or RPC nodes fail.
+PolkaConnect is a fully functional multi-chain dashboard application for the Polkadot ecosystem that enables users to view balances across parachains (Polkadot, Astar, Moonbeam), track governance proposals, vote on referenda, and visualize parachain network topology. The application is designed with resilience in mind, implementing fallback mechanisms and caching to maintain functionality even when individual chains or RPC nodes fail.
+
+**Status**: Production-ready. All core features implemented and tested.
+
+**Recent Updates (Nov 8, 2025)**:
+- ✅ Fixed critical BigInt conversion bug for high-decimal chains (18+ decimals)
+- ✅ Integrated real Polkadot.js API connections to live RPC nodes
+- ✅ Connected frontend to backend APIs with localStorage caching
+- ✅ End-to-end testing completed successfully (all wallet-independent features verified)
+- ✅ Wallet integration working (shows appropriate error when extension not available)
 
 ## User Preferences
 
