@@ -1,21 +1,32 @@
 import { NetworkMap } from "@/components/NetworkMap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity } from "lucide-react";
+import { useNetwork } from "@/hooks/useNetwork";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Network() {
-  //todo: remove mock functionality
-  const nodes = [
-    { id: 'polkadot', name: 'Polkadot', blockHeight: 18234567, uptime: 99.9, status: 'online' as const, x: 400, y: 80 },
-    { id: 'astar', name: 'Astar', blockHeight: 5123456, uptime: 99.5, status: 'online' as const, x: 250, y: 200 },
-    { id: 'moonbeam', name: 'Moonbeam', blockHeight: 4567890, uptime: 98.2, status: 'syncing' as const, x: 550, y: 200 },
-    { id: 'acala', name: 'Acala', blockHeight: 3987654, uptime: 99.7, status: 'online' as const, x: 150, y: 320 },
-    { id: 'parallel', name: 'Parallel', blockHeight: 2876543, uptime: 99.3, status: 'online' as const, x: 650, y: 320 },
-  ];
+  const { data: nodes, isLoading } = useNetwork();
+
+  const positionNodes = (nodeList: any[]) => {
+    const positions = [
+      { x: 400, y: 80 },
+      { x: 250, y: 200 },
+      { x: 550, y: 200 },
+      { x: 150, y: 320 },
+      { x: 650, y: 320 },
+    ];
+
+    return nodeList.map((node, idx) => ({
+      ...node,
+      x: positions[idx]?.x || 400,
+      y: positions[idx]?.y || 200,
+    }));
+  };
 
   const xcmActivity = [
     { from: "Polkadot", to: "Astar", count: 1234, assets: "DOT, ASTR" },
-    { from: "Moonbeam", to: "Acala", count: 567, assets: "GLMR, ACA" },
-    { from: "Astar", to: "Parallel", count: 890, assets: "ASTR, PARA" },
+    { from: "Moonbeam", to: "Polkadot", count: 567, assets: "GLMR, DOT" },
+    { from: "Astar", to: "Moonbeam", count: 890, assets: "ASTR, GLMR" },
   ];
 
   return (
@@ -27,7 +38,17 @@ export default function Network() {
         </p>
       </div>
 
-      <NetworkMap nodes={nodes} />
+      {isLoading ? (
+        <div className="h-96 bg-card rounded-lg animate-pulse" />
+      ) : nodes && nodes.length > 0 ? (
+        <NetworkMap nodes={positionNodes(nodes)} />
+      ) : (
+        <Alert>
+          <AlertDescription>
+            Unable to load network data. Please try again later.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>

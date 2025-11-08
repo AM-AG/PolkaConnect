@@ -2,63 +2,20 @@ import { DashboardStats } from "@/components/DashboardStats";
 import { BalanceCard } from "@/components/BalanceCard";
 import { ProposalCard } from "@/components/ProposalCard";
 import { StatusBanner } from "@/components/StatusBanner";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useWallet } from "@/hooks/useWallet";
+import { useBalances } from "@/hooks/useBalances";
+import { useGovernance } from "@/hooks/useGovernance";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Wallet } from "lucide-react";
 
 export default function Dashboard() {
-  const [connectionStatus] = useState<"online" | "syncing" | "offline" | "cached">("online");
   const { toast } = useToast();
-
-  //todo: remove mock functionality
-  const mockBalances = [
-    {
-      chainName: "Polkadot",
-      chainIcon: "●",
-      balance: "142.50",
-      usdValue: "1,425.00",
-      lastUpdated: "2 mins ago",
-      status: "online" as const,
-    },
-    {
-      chainName: "Astar",
-      chainIcon: "★",
-      balance: "8,432.10",
-      usdValue: "842.32",
-      lastUpdated: "5 mins ago",
-      status: "online" as const,
-    },
-    {
-      chainName: "Moonbeam",
-      chainIcon: "◐",
-      balance: "256.75",
-      usdValue: "512.45",
-      lastUpdated: "1 min ago",
-      status: "syncing" as const,
-    },
-  ];
-
-  const mockProposals = [
-    {
-      id: 123,
-      title: "Increase Validator Count to 350",
-      proposer: "5GrwvaEF...kutQY",
-      status: "active" as const,
-      ayeVotes: 1250,
-      nayVotes: 320,
-      deadline: "2 days",
-      description: "This proposal suggests increasing the active validator set from 297 to 350 validators to improve network decentralization and security.",
-    },
-    {
-      id: 122,
-      title: "Treasury Spend for Development Grant",
-      proposer: "5HpG9w8E...vFwbx",
-      status: "passed" as const,
-      ayeVotes: 2100,
-      nayVotes: 450,
-      deadline: "Ended",
-      description: "Approved funding for core infrastructure development.",
-    },
-  ];
+  const { selectedAccount, isConnected } = useWallet();
+  const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useBalances(
+    selectedAccount?.address || null
+  );
+  const { data: proposals, isLoading: proposalsLoading } = useGovernance();
 
   const handleVote = (proposalId: number, vote: "aye" | "nay") => {
     console.log(`Voted ${vote} on proposal ${proposalId}`);
@@ -70,18 +27,40 @@ export default function Dashboard() {
 
   const handleRefresh = (chainName: string) => {
     console.log(`Refreshing ${chainName} balance`);
+    refetchBalances();
     toast({
       title: "Balance Updated",
       description: `${chainName} balance has been refreshed`,
     });
   };
 
+  if (!isConnected) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Alert className="max-w-md">
+          <Wallet className="h-4 w-4" />
+          <AlertDescription>
+            Please connect your Polkadot wallet to view your dashboard and balances.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  const formatLastUpdated = (isoString: string) => {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  };
+
   return (
     <div className="space-y-6">
-      {connectionStatus !== "online" && (
-        <StatusBanner mode={connectionStatus} />
-      )}
-
       <div>
         <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
         <p className="text-muted-foreground">
@@ -93,28 +72,61 @@ export default function Dashboard() {
 
       <div>
         <h2 className="text-2xl font-semibold mb-4">Chain Balances</h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {mockBalances.map((balance) => (
-            <BalanceCard
-              key={balance.chainName}
-              {...balance}
-              onRefresh={() => handleRefresh(balance.chainName)}
-            />
-          ))}
-        </div>
+        {balancesLoading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-40 bg-card rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : balances && balances.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {balances.map((balance) => (
+              <BalanceCard
+                key={balance.chainId}
+                chainName={balance.chainName}
+                chainIcon={balance.chainId === 'polkadot' ? '●' : balance.chainId === 'astar' ? '★' : '◐'}
+                balance={balance.balance}
+                usdValue={balance.usdValue}
+                lastUpdated={formatLastUpdated(balance.lastUpdated)}
+                status={balance.status}
+                onRefresh={() => handleRefresh(balance.chainName)}
+              />
+            ))}
+          </div>
+        ) : (
+          <Alert>
+            <AlertDescription>
+              No balances found. Make sure your wallet has assets on supported chains.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       <div>
         <h2 className="text-2xl font-semibold mb-4">Recent Proposals</h2>
-        <div className="space-y-4">
-          {mockProposals.map((proposal) => (
-            <ProposalCard
-              key={proposal.id}
-              {...proposal}
-              onVote={(vote) => handleVote(proposal.id, vote)}
-            />
-          ))}
-        </div>
+        {proposalsLoading ? (
+          <div className="space-y-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-48 bg-card rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : proposals && proposals.length > 0 ? (
+          <div className="space-y-4">
+            {proposals.slice(0, 5).map((proposal) => (
+              <ProposalCard
+                key={proposal.id}
+                {...proposal}
+                onVote={(vote) => handleVote(proposal.id, vote)}
+              />
+            ))}
+          </div>
+        ) : (
+          <Alert>
+            <AlertDescription>
+              No active proposals at the moment. Check back later for governance updates.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
     </div>
   );
