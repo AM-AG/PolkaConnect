@@ -86,7 +86,8 @@ export async function fetchBalance(chainId: string, address: string): Promise<Ch
     const accountInfo = await api.query.system.account(address);
     const accountData = accountInfo.toJSON() as any;
     const free = accountData?.data?.free || '0';
-    const balanceInTokens = (BigInt(free) / BigInt(10 ** chain.decimals)).toString();
+    const divisor = BigInt(10) ** BigInt(chain.decimals);
+    const balanceInTokens = (BigInt(free) / divisor).toString();
     
     const header = await api.rpc.chain.getHeader();
     const blockHeight = (header.number.toJSON() as any) || 0;
