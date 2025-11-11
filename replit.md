@@ -2,16 +2,18 @@
 
 ## Overview
 
-PolkaConnect is a fully functional multi-chain dashboard application for the Polkadot ecosystem that enables users to view balances across parachains (Polkadot, Astar, Moonbeam), track governance proposals, vote on referenda, and visualize parachain network topology. The application is designed with resilience in mind, implementing fallback mechanisms and caching to maintain functionality even when individual chains or RPC nodes fail.
+PolkaConnect is a fully functional multi-chain control hub supporting both Polkadot (Substrate) and Ethereum (EVM) ecosystems. Users can connect either Polkadot.js extension or MetaMask wallet to view balances, track governance proposals across chains, monitor cross-chain messaging (XCM) activity, and visualize parachain network topology. The application is designed with resilience in mind, implementing fallback mechanisms and caching to maintain functionality even when individual chains or RPC nodes fail.
 
-**Status**: Production-ready. All core features implemented and tested.
+**Status**: Production-ready multi-chain hub. Supports both Polkadot and Ethereum ecosystems.
 
-**Recent Updates (Nov 8, 2025)**:
+**Recent Updates (Nov 11, 2025)**:
+- ✅ **Multi-Wallet Support**: Added dual wallet integration (Polkadot.js + MetaMask)
+- ✅ **Ethereum Integration**: Full EVM support with balance fetching via ethers.js
+- ✅ **XCM Monitoring**: Parachain discovery and cross-chain messaging visibility
+- ✅ **Enhanced Error Handling**: Better extension detection with helpful user messages for Edge browser
+- ✅ **Unified Dashboard**: Combined stats showing portfolio across both ecosystems
 - ✅ Fixed critical BigInt conversion bug for high-decimal chains (18+ decimals)
 - ✅ Integrated real Polkadot.js API connections to live RPC nodes
-- ✅ Connected frontend to backend APIs with localStorage caching
-- ✅ End-to-end testing completed successfully (all wallet-independent features verified)
-- ✅ Wallet integration working (shows appropriate error when extension not available)
 
 ## User Preferences
 
@@ -74,9 +76,12 @@ Preferred communication style: Simple, everyday language.
 - Multiple chain support: Polkadot relay chain, Astar, Moonbeam
 
 **Wallet Integration**:
+- **Dual Wallet Support**: Connect with either Polkadot.js extension or MetaMask
 - Polkadot.js browser extension integration via `@polkadot/extension-dapp`
-- Multi-account support with account selection
-- LocalStorage persistence of wallet connection state
+- MetaMask integration via ethers.js `BrowserProvider`
+- Multi-account support with account selection (Polkadot)
+- LocalStorage persistence of wallet type and connection state
+- Enhanced error handling with browser-specific guidance (Edge, Chrome, etc.)
 - Address display with truncation for UI clarity
 
 **Governance Features**:
@@ -85,10 +90,18 @@ Preferred communication style: Simple, everyday language.
 - Vote submission capability (implementation pending on-chain transactions)
 
 **Balance Queries**:
-- Queries native token balances using `system.account` for each configured chain
+- **Polkadot**: Queries native DOT balance using `system.account` 
+- **Ethereum**: Queries ETH balance using ethers.js `getBalance`
 - Converts on-chain balance units to human-readable decimals
 - Mock USD value calculation (placeholder for future price oracle integration)
+- Support for multiple EVM and Substrate chains
 - Block height tracking for chain status verification
+
+**Cross-Chain Messaging (XCM)**:
+- Discovers active parachains connected to Polkadot relay chain
+- Maps parachain IDs to known chain names (Moonbeam, Astar, Acala, etc.)
+- Displays XCM channel status and activity
+- Foundation for future cross-chain asset transfers
 
 ### Data Storage
 

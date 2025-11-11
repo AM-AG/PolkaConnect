@@ -36,6 +36,13 @@ export function useMultiWallet() {
     try {
       console.log("Connecting to Polkadot.js extension...");
 
+      // Detect Edge browser and provide specific guidance
+      const isEdge = typeof navigator !== 'undefined' && /Edg/.test(navigator.userAgent);
+      
+      if (isEdge) {
+        console.log("Edge browser detected - providing Edge-specific guidance");
+      }
+
       const extensions = await Promise.race([
         web3Enable("PolkaConnect"),
         new Promise<never>((_, reject) =>
@@ -46,13 +53,24 @@ export function useMultiWallet() {
       console.log(`Found ${extensions.length} Polkadot extension(s)`);
 
       if (extensions.length === 0) {
-        throw new Error(
-          "Polkadot.js extension not found. Please:\n" +
-            "1. Install the extension from polkadot.js.org/extension\n" +
-            "2. Enable it in your browser\n" +
-            "3. Refresh this page\n" +
-            "4. Grant permission when prompted"
-        );
+        let errorMsg = "Polkadot.js extension not found. Please:\n" +
+          "1. Install the extension from polkadot.js.org/extension\n" +
+          "2. Enable it in your browser\n" +
+          "3. Refresh this page\n" +
+          "4. Grant permission when prompted";
+        
+        if (isEdge) {
+          errorMsg = "Polkadot.js extension not detected on Microsoft Edge.\n\n" +
+            "Edge-specific steps:\n" +
+            "1. Install the extension from Microsoft Edge Add-ons or polkadot.js.org/extension\n" +
+            "2. Click the puzzle icon (Extensions) in the toolbar\n" +
+            "3. Ensure Polkadot.js extension is enabled\n" +
+            "4. Grant permission to this site when prompted\n" +
+            "5. Refresh this page and try connecting again\n\n" +
+            "Note: You may need to pin the extension to see it in your toolbar.";
+        }
+        
+        throw new Error(errorMsg);
       }
 
       const accounts = await web3Accounts();

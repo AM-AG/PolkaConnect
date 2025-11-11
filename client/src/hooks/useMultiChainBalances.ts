@@ -14,8 +14,10 @@ export interface ChainBalance {
 }
 
 async function getPolkadotBalance(address: string): Promise<ChainBalance> {
+  let api: ApiPromise | null = null;
+  
   try {
-    const api = await ApiPromise.create({
+    api = await ApiPromise.create({
       provider: new WsProvider("wss://rpc.polkadot.io"),
     });
 
@@ -25,8 +27,6 @@ async function getPolkadotBalance(address: string): Promise<ChainBalance> {
     const divisor = BigInt(10) ** BigInt(10); // DOT has 10 decimals
     const balance = (BigInt(free) / divisor).toString();
     const usdValue = (parseFloat(balance) * 7.5).toFixed(2); // Mock price
-
-    await api.disconnect();
 
     return {
       chainId: "polkadot",
@@ -48,6 +48,15 @@ async function getPolkadotBalance(address: string): Promise<ChainBalance> {
       lastUpdated: new Date().toISOString(),
       status: "offline",
     };
+  } finally {
+    // Always disconnect to prevent websocket leaks
+    if (api) {
+      try {
+        await api.disconnect();
+      } catch (disconnectError) {
+        console.error("Error disconnecting from Polkadot API:", disconnectError);
+      }
+    }
   }
 }
 

@@ -9,16 +9,16 @@ export interface XcmChannel {
 }
 
 async function getXcmChannels(): Promise<XcmChannel[]> {
+  let api: ApiPromise | null = null;
+  
   try {
-    const api = await ApiPromise.create({
+    api = await ApiPromise.create({
       provider: new WsProvider("wss://rpc.polkadot.io"),
     });
 
     const parachains = await api.query.paras.parachains();
     const parachainsArray = parachains.toJSON() as any[];
     const parachainIds = parachainsArray.map((para: any) => parseInt(para.toString()));
-
-    await api.disconnect();
 
     // Map known parachain IDs to names
     const parachainNames: Record<number, string> = {
@@ -40,6 +40,15 @@ async function getXcmChannels(): Promise<XcmChannel[]> {
   } catch (error) {
     console.error("XCM channels fetch error:", error);
     return [];
+  } finally {
+    // Always disconnect to prevent websocket leaks
+    if (api) {
+      try {
+        await api.disconnect();
+      } catch (disconnectError) {
+        console.error("Error disconnecting from Polkadot API:", disconnectError);
+      }
+    }
   }
 }
 
