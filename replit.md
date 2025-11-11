@@ -7,13 +7,15 @@ PolkaConnect is a fully functional multi-chain control hub supporting both Polka
 **Status**: Production-ready multi-chain hub. Supports both Polkadot and Ethereum ecosystems.
 
 **Recent Updates (Nov 11, 2025)**:
-- ✅ **Multi-Wallet Support**: Added dual wallet integration (Polkadot.js + MetaMask)
-- ✅ **Ethereum Integration**: Full EVM support with balance fetching via ethers.js
-- ✅ **XCM Monitoring**: Parachain discovery and cross-chain messaging visibility
-- ✅ **Enhanced Error Handling**: Better extension detection with helpful user messages for Edge browser
-- ✅ **Unified Dashboard**: Combined stats showing portfolio across both ecosystems
-- ✅ Fixed critical BigInt conversion bug for high-decimal chains (18+ decimals)
-- ✅ Integrated real Polkadot.js API connections to live RPC nodes
+- ✅ **Multi-Account Selection**: Users can now view and switch between all Polkadot.js wallet accounts
+- ✅ **Account Persistence**: Selected Polkadot account persists across page refreshes via localStorage
+- ✅ **Multi-Parachain Balances**: Simultaneous balance fetching from Polkadot, Astar, and Moonbeam
+- ✅ **Decimal Precision Fix**: Proper fractional balance display using modulo arithmetic (preserves all decimals)
+- ✅ **Address Compatibility**: Substrate chains use SS58 addresses, EVM chains use H160 addresses
+- ✅ **Moonbeam Integration**: Fixed RPC compatibility (HTTPS instead of WebSocket) for JsonRpcProvider
+- ✅ **Resilient Balance Fetching**: Promise.allSettled ensures one chain failure doesn't block others
+- ✅ **Multi-Wallet Support**: Simultaneous Polkadot.js + MetaMask connections with unified balance view
+- ✅ **Enhanced Error Handling**: Graceful fallback to cached data with status indicators (online/cached/offline)
 
 ## User Preferences
 
@@ -76,11 +78,15 @@ Preferred communication style: Simple, everyday language.
 - Multiple chain support: Polkadot relay chain, Astar, Moonbeam
 
 **Wallet Integration**:
-- **Dual Wallet Support**: Connect with either Polkadot.js extension or MetaMask
+- **Dual Wallet Support**: Simultaneous connection to both Polkadot.js extension AND MetaMask
 - Polkadot.js browser extension integration via `@polkadot/extension-dapp`
+  - Multi-account support: View all accounts from extension
+  - Account selection dropdown with names and visual indicators
+  - `selectPolkadotAccount(address)` method for switching accounts
+  - `activePolkadotAccount` computed property returns current account
+  - Persists selected account to localStorage (key: "polkaconnect_polkadot_address")
+  - Restores saved account on reconnect/refresh
 - MetaMask integration via ethers.js `BrowserProvider`
-- Multi-account support with account selection (Polkadot)
-- LocalStorage persistence of wallet type and connection state
 - Enhanced error handling with browser-specific guidance (Edge, Chrome, etc.)
 - Address display with truncation for UI clarity
 
@@ -90,12 +96,24 @@ Preferred communication style: Simple, everyday language.
 - Vote submission capability (implementation pending on-chain transactions)
 
 **Balance Queries**:
-- **Polkadot**: Queries native DOT balance using `system.account` 
-- **Ethereum**: Queries ETH balance using ethers.js `getBalance`
-- Converts on-chain balance units to human-readable decimals
-- Mock USD value calculation (placeholder for future price oracle integration)
-- Support for multiple EVM and Substrate chains
-- Block height tracking for chain status verification
+- **Multi-Chain Configuration** (`parachains.ts`):
+  - Polkadot: Substrate, 10 decimals, DOT, WebSocket RPC
+  - Astar: Substrate, 18 decimals, ASTR, WebSocket RPC
+  - Moonbeam: EVM, 18 decimals, GLMR, HTTPS RPC
+  - Ethereum: EVM, 18 decimals, ETH
+- **Substrate Balance Fetching**:
+  - Queries using Polkadot.js API `system.account` with SS58 addresses
+  - Decimal precision preserved via BigInt modulo arithmetic
+  - Format: `wholePart.fractionalPart` with trailing zeros removed
+- **EVM Balance Fetching**:
+  - Queries using ethers.js `getBalance` with H160 addresses
+  - Moonbeam balances fetch when MetaMask connected
+  - Ethereum mainnet balance via BrowserProvider
+- **Resilience Features**:
+  - Promise.allSettled: One chain failure doesn't block others
+  - Cache namespace: `balance:{chainId}:{address}`
+  - Status indicators: online, cached, offline
+  - Mock USD value calculation (placeholder for future price oracle integration)
 
 **Cross-Chain Messaging (XCM)**:
 - Discovers active parachains connected to Polkadot relay chain
