@@ -10,14 +10,16 @@ import Dashboard from "@/pages/Dashboard";
 import Assets from "@/pages/Assets";
 import Governance from "@/pages/Governance";
 import Network from "@/pages/Network";
+import Staking from "@/pages/staking";
 import NotFound from "@/pages/not-found";
-import { LayoutDashboard, Wallet, Vote, Network as NetworkIcon } from "lucide-react";
+import { LayoutDashboard, Wallet, Vote, Network as NetworkIcon, Lock } from "lucide-react";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/assets" component={Assets} />
+      <Route path="/staking" component={Staking} />
       <Route path="/governance" component={Governance} />
       <Route path="/network" component={Network} />
       <Route component={NotFound} />
@@ -31,6 +33,7 @@ function Navigation() {
   const navItems = [
     { path: "/", label: "Dashboard", icon: LayoutDashboard, testId: "link-dashboard" },
     { path: "/assets", label: "Assets", icon: Wallet, testId: "link-assets" },
+    { path: "/staking", label: "Staking", icon: Lock, testId: "link-staking" },
     { path: "/governance", label: "Governance", icon: Vote, testId: "link-governance" },
     { path: "/network", label: "Network", icon: NetworkIcon, testId: "link-network" },
   ];
