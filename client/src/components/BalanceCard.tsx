@@ -9,8 +9,9 @@ interface BalanceCardProps {
   balance: string;
   usdValue: string;
   lastUpdated: string;
-  status: "online" | "syncing" | "offline";
+  status: "online" | "syncing" | "offline" | "cached";
   onRefresh?: () => void;
+  symbol?: string;
 }
 
 export function BalanceCard({
@@ -34,12 +35,14 @@ export function BalanceCard({
     online: "text-green-500",
     syncing: "text-yellow-500",
     offline: "text-red-500",
+    cached: "text-blue-500",
   };
 
   const statusText = {
     online: "Online",
     syncing: "Syncing",
     offline: "Offline",
+    cached: "Cached",
   };
 
   return (

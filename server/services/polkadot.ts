@@ -1,5 +1,5 @@
-import { ApiPromise, WsProvider } from '@polkadot/api';
-import type { ChainBalance, NetworkNode } from '@shared/schema';
+import { ApiPromise, WsProvider } from "@polkadot/api";
+import type { ChainBalance, NetworkNode } from "@shared/schema";
 
 interface ChainConfig {
   id: string;
@@ -12,36 +12,36 @@ interface ChainConfig {
 
 const CHAINS: ChainConfig[] = [
   {
-    id: 'polkadot',
-    name: 'Polkadot',
-    icon: '●',
-    rpcEndpoint: 'wss://rpc.polkadot.io',
+    id: "polkadot",
+    name: "Polkadot",
+    icon: "●",
+    rpcEndpoint: "wss://rpc.polkadot.io",
     decimals: 10,
-    symbol: 'DOT'
+    symbol: "DOT",
   },
   {
-    id: 'astar',
-    name: 'Astar',
-    icon: '★',
-    rpcEndpoint: 'wss://rpc.astar.network',
+    id: "astar",
+    name: "Astar",
+    icon: "★",
+    rpcEndpoint: "wss://rpc.astar.network",
     decimals: 18,
-    symbol: 'ASTR'
+    symbol: "ASTR",
   },
   {
-    id: 'moonbeam',
-    name: 'Moonbeam',
-    icon: '◐',
-    rpcEndpoint: 'wss://wss.api.moonbeam.network',
+    id: "moonbeam",
+    name: "Moonbeam",
+    icon: "◐",
+    rpcEndpoint: "wss://wss.api.moonbeam.network",
     decimals: 18,
-    symbol: 'GLMR'
-  }
+    symbol: "GLMR",
+  },
 ];
 
 const apiCache = new Map<string, { api: ApiPromise; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 async function getApi(chainId: string): Promise<ApiPromise | null> {
-  const chain = CHAINS.find(c => c.id === chainId);
+  const chain = CHAINS.find((c) => c.id === chainId);
   if (!chain) return null;
 
   const cached = apiCache.get(chainId);
@@ -51,12 +51,12 @@ async function getApi(chainId: string): Promise<ApiPromise | null> {
 
   try {
     const provider = new WsProvider(chain.rpcEndpoint, 3000);
-    const api = await ApiPromise.create({ 
+    const api = await ApiPromise.create({
       provider,
       throwOnConnect: false,
-      throwOnUnknown: false
+      throwOnUnknown: false,
     });
-    
+
     await api.isReady;
     apiCache.set(chainId, { api, timestamp: Date.now() });
     return api;
@@ -66,8 +66,11 @@ async function getApi(chainId: string): Promise<ApiPromise | null> {
   }
 }
 
-export async function fetchBalance(chainId: string, address: string): Promise<ChainBalance | null> {
-  const chain = CHAINS.find(c => c.id === chainId);
+export async function fetchBalance(
+  chainId: string,
+  address: string,
+): Promise<ChainBalance | null> {
+  const chain = CHAINS.find((c) => c.id === chainId);
   if (!chain) return null;
 
   const api = await getApi(chainId);
@@ -75,20 +78,20 @@ export async function fetchBalance(chainId: string, address: string): Promise<Ch
     return {
       chainId,
       chainName: chain.name,
-      balance: '0',
-      usdValue: '0',
+      balance: "0",
+      usdValue: "0",
       lastUpdated: new Date().toISOString(),
-      status: 'offline'
+      status: "offline",
     };
   }
 
   try {
     const accountInfo = await api.query.system.account(address);
     const accountData = accountInfo.toJSON() as any;
-    const free = accountData?.data?.free || '0';
+    const free = accountData?.data?.free || "0";
     const divisor = BigInt(10) ** BigInt(chain.decimals);
     const balanceInTokens = (BigInt(free) / divisor).toString();
-    
+
     const header = await api.rpc.chain.getHeader();
     const blockHeight = (header.number.toJSON() as any) || 0;
 
@@ -98,24 +101,28 @@ export async function fetchBalance(chainId: string, address: string): Promise<Ch
       balance: parseFloat(balanceInTokens).toFixed(4),
       usdValue: (parseFloat(balanceInTokens) * 10).toFixed(2), // Mock USD conversion
       lastUpdated: new Date().toISOString(),
-      status: 'online',
-      blockHeight
+      status: "online",
+      blockHeight,
     };
   } catch (error) {
     console.error(`Error fetching balance for ${chain.name}:`, error);
     return {
       chainId,
       chainName: chain.name,
-      balance: '0',
-      usdValue: '0',
+      balance: "0",
+      usdValue: "0",
       lastUpdated: new Date().toISOString(),
-      status: 'offline'
+      status: "offline",
     };
   }
 }
 
-export async function fetchAllBalances(address: string): Promise<ChainBalance[]> {
-  const balancePromises = CHAINS.map(chain => fetchBalance(chain.id, address));
+export async function fetchAllBalances(
+  address: string,
+): Promise<ChainBalance[]> {
+  const balancePromises = CHAINS.map((chain) =>
+    fetchBalance(chain.id, address),
+  );
   const balances = await Promise.all(balancePromises);
   return balances.filter((b): b is ChainBalance => b !== null);
 }
@@ -123,29 +130,29 @@ export async function fetchAllBalances(address: string): Promise<ChainBalance[]>
 export async function getNetworkStatus(): Promise<NetworkNode[]> {
   const nodePromises = CHAINS.map(async (chain): Promise<NetworkNode> => {
     const api = await getApi(chain.id);
-    
+
     if (!api) {
       return {
         id: chain.id,
         name: chain.name,
         blockHeight: 0,
         uptime: 0,
-        status: 'offline',
-        rpcEndpoint: chain.rpcEndpoint
+        status: "offline",
+        rpcEndpoint: chain.rpcEndpoint,
       };
     }
 
     try {
       const header = await api.rpc.chain.getHeader();
       const blockHeight = (header.number.toJSON() as any) || 0;
-      
+
       return {
         id: chain.id,
         name: chain.name,
         blockHeight,
         uptime: 99.5, // Mock uptime percentage
-        status: 'online',
-        rpcEndpoint: chain.rpcEndpoint
+        status: "online",
+        rpcEndpoint: chain.rpcEndpoint,
       };
     } catch (error) {
       console.error(`Error getting status for ${chain.name}:`, error);
@@ -154,8 +161,8 @@ export async function getNetworkStatus(): Promise<NetworkNode[]> {
         name: chain.name,
         blockHeight: 0,
         uptime: 0,
-        status: 'offline',
-        rpcEndpoint: chain.rpcEndpoint
+        status: "offline",
+        rpcEndpoint: chain.rpcEndpoint,
       };
     }
   });

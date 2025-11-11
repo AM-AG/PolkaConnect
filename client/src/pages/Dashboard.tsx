@@ -1,21 +1,23 @@
-import { DashboardStats } from "@/components/DashboardStats";
+import { MultiChainStats } from "@/components/MultiChainStats";
 import { BalanceCard } from "@/components/BalanceCard";
 import { ProposalCard } from "@/components/ProposalCard";
-import { StatusBanner } from "@/components/StatusBanner";
 import { useToast } from "@/hooks/use-toast";
-import { useWallet } from "@/hooks/useWallet";
-import { useBalances } from "@/hooks/useBalances";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
+import { useMultiChainBalances } from "@/hooks/useMultiChainBalances";
 import { useGovernance } from "@/hooks/useGovernance";
+import { useXcmData } from "@/hooks/useXcmData";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wallet } from "lucide-react";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { selectedAccount, isConnected } = useWallet();
-  const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useBalances(
-    selectedAccount?.address || null
+  const { walletState, isConnected } = useMultiWallet();
+  const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useMultiChainBalances(
+    walletState.address,
+    walletState.type
   );
   const { data: proposals, isLoading: proposalsLoading } = useGovernance();
+  const { data: xcmChannels } = useXcmData();
 
   const handleVote = (proposalId: number, vote: "aye" | "nay") => {
     console.log(`Voted ${vote} on proposal ${proposalId}`);
@@ -62,13 +64,13 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
+        <h1 className="text-4xl font-bold mb-2">Multi-Chain Dashboard</h1>
         <p className="text-muted-foreground">
-          Monitor your multi-chain portfolio and participate in governance
+          Monitor your portfolio across Polkadot and Ethereum ecosystems
         </p>
       </div>
 
-      <DashboardStats />
+      <MultiChainStats />
 
       <div>
         <h2 className="text-2xl font-semibold mb-4">Chain Balances</h2>
@@ -84,12 +86,13 @@ export default function Dashboard() {
               <BalanceCard
                 key={balance.chainId}
                 chainName={balance.chainName}
-                chainIcon={balance.chainId === 'polkadot' ? '●' : balance.chainId === 'astar' ? '★' : '◐'}
-                balance={balance.balance}
+                chainIcon={balance.chainId === 'polkadot' ? '●' : balance.chainId === 'ethereum' ? 'Ξ' : balance.chainId === 'astar' ? '★' : '◐'}
+                balance={`${balance.balance} ${balance.symbol}`}
                 usdValue={balance.usdValue}
                 lastUpdated={formatLastUpdated(balance.lastUpdated)}
                 status={balance.status}
                 onRefresh={() => handleRefresh(balance.chainName)}
+                symbol={balance.symbol}
               />
             ))}
           </div>

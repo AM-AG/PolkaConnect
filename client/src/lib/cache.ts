@@ -68,3 +68,7 @@ export function clearCache(key?: string): void {
     });
   }
 }
+
+// Aliases for compatibility
+export const getCachedData = getCacheWithAge;
+export const setCachedData = setCache;

@@ -20,11 +20,12 @@ export default function Governance() {
     });
   };
 
-  const filteredProposals = proposals?.filter(
-    (p) =>
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.id.toString().includes(searchQuery)
-  ) || [];
+  const filteredProposals =
+    proposals?.filter(
+      (p) =>
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.id.toString().includes(searchQuery),
+    ) || [];
 
   return (
     <div className="space-y-6">

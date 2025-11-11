@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { WalletConnect } from "@/components/WalletConnect";
+import { MultiWalletConnect } from "@/components/MultiWalletConnect";
 import Dashboard from "@/pages/Dashboard";
 import Assets from "@/pages/Assets";
 import Governance from "@/pages/Governance";
@@ -71,7 +71,7 @@ function Navigation() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <WalletConnect />
+            <MultiWalletConnect />
           </div>
         </div>
       </div>
