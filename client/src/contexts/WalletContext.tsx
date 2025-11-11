@@ -30,9 +30,11 @@ interface WalletContextValue {
   disconnectPolkadot: () => void;
   disconnectEthereum: () => void;
   disconnectAll: () => void;
+  selectPolkadotAccount: (address: string) => void;
   isPolkadotConnected: boolean;
   isEthereumConnected: boolean;
   isAnyConnected: boolean;
+  activePolkadotAccount: PolkadotAccount | null;
 }
 
 const WalletContext = createContext<WalletContextValue | undefined>(undefined);
@@ -106,19 +108,25 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         );
       }
 
+      // Check if we have a previously selected address
+      const savedAddress = localStorage.getItem("polkaconnect_polkadot_address");
+      const selectedAccount = savedAddress && accounts.find(acc => acc.address === savedAddress)
+        ? savedAddress
+        : accounts[0].address;
+
       setWalletState(prev => ({
         ...prev,
         polkadot: {
           connected: true,
-          address: accounts[0].address,
+          address: selectedAccount,
           accounts: accounts,
         },
       }));
 
       localStorage.setItem("polkaconnect_polkadot_connected", "true");
-      localStorage.setItem("polkaconnect_polkadot_address", accounts[0].address);
+      localStorage.setItem("polkaconnect_polkadot_address", selectedAccount);
 
-      console.log("✅ Connected to Polkadot wallet:", accounts[0].address);
+      console.log("✅ Connected to Polkadot wallet:", selectedAccount);
       
       return accounts[0];
     } catch (err) {
@@ -217,6 +225,21 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setError(null);
   };
 
+  const selectPolkadotAccount = (address: string) => {
+    const account = walletState.polkadot.accounts.find(acc => acc.address === address);
+    if (account) {
+      setWalletState(prev => ({
+        ...prev,
+        polkadot: {
+          ...prev.polkadot,
+          address,
+        },
+      }));
+      localStorage.setItem("polkaconnect_polkadot_address", address);
+      console.log("Switched to Polkadot account:", address);
+    }
+  };
+
   // Auto-reconnect on mount (runs only once)
   useEffect(() => {
     if (hasInitialized) return;
@@ -245,6 +268,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setHasInitialized(true);
   }, [hasInitialized]);
 
+  const activePolkadotAccount = walletState.polkadot.accounts.find(
+    acc => acc.address === walletState.polkadot.address
+  ) || null;
+
   const value: WalletContextValue = {
     walletState,
     isConnecting,
@@ -254,9 +281,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     disconnectPolkadot,
     disconnectEthereum,
     disconnectAll,
+    selectPolkadotAccount,
     isPolkadotConnected: walletState.polkadot.connected,
     isEthereumConnected: walletState.ethereum.connected,
     isAnyConnected: walletState.polkadot.connected || walletState.ethereum.connected,
+    activePolkadotAccount,
   };
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;

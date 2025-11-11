@@ -4,8 +4,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Copy, LogOut, Circle } from "lucide-react";
+import { Copy, LogOut, Circle, ChevronDown, User } from "lucide-react";
 import { SiPolkadot, SiEthereum } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
@@ -19,8 +21,10 @@ export function MultiWalletConnect() {
     connectEthereum,
     disconnectPolkadot,
     disconnectEthereum,
+    selectPolkadotAccount,
     isPolkadotConnected,
     isEthereumConnected,
+    activePolkadotAccount,
   } = useMultiWallet();
 
   const handleConnectPolkadot = async () => {
@@ -108,20 +112,65 @@ export function MultiWalletConnect() {
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-72">
-            <div className="px-2 py-1.5 text-xs text-muted-foreground">
-              Connected to Polkadot
-            </div>
+          <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuLabel className="flex items-center gap-2">
+              <SiPolkadot className="h-4 w-4" />
+              Polkadot Accounts
+              <span className="ml-auto text-xs text-muted-foreground">
+                {walletState.polkadot.accounts.length} account{walletState.polkadot.accounts.length !== 1 ? 's' : ''}
+              </span>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            
+            {/* Account Selection */}
+            {walletState.polkadot.accounts.map((account) => {
+              const isActive = account.address === walletState.polkadot.address;
+              return (
+                <DropdownMenuItem
+                  key={account.address}
+                  onClick={() => {
+                    if (!isActive) {
+                      selectPolkadotAccount(account.address);
+                      toast({
+                        title: "Account Switched",
+                        description: `Now viewing ${account.meta.name || "unnamed account"}`,
+                      });
+                    }
+                  }}
+                  data-testid={`button-select-account-${account.address}`}
+                  className="flex items-start gap-2 py-3"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <User className="h-3 w-3" />
+                      <span className="font-medium text-sm">
+                        {account.meta.name || "Unnamed Account"}
+                      </span>
+                      {isActive && (
+                        <Circle className="h-2 w-2 fill-green-500 text-green-500 ml-auto" />
+                      )}
+                    </div>
+                    <div className="font-mono text-xs text-muted-foreground mt-1">
+                      {truncateAddress(account.address)}
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+              );
+            })}
+            
+            <DropdownMenuSeparator />
+            
             <DropdownMenuItem 
               onClick={() => copyAddress(walletState.polkadot.address || "", "Polkadot")} 
               data-testid="button-copy-polkadot-address"
             >
               <Copy className="h-4 w-4 mr-2" />
-              <span className="font-mono text-xs truncate">{walletState.polkadot.address}</span>
+              Copy Active Address
             </DropdownMenuItem>
+            
             <DropdownMenuItem onClick={handleDisconnectPolkadot} data-testid="button-disconnect-polkadot">
               <LogOut className="h-4 w-4 mr-2" />
-              Disconnect
+              Disconnect All Accounts
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
