@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MultiWalletConnect } from "@/components/MultiWalletConnect";
+import { WalletProvider } from "@/contexts/WalletContext";
 import Dashboard from "@/pages/Dashboard";
 import Assets from "@/pages/Assets";
 import Governance from "@/pages/Governance";
@@ -82,15 +83,17 @@ function Navigation() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="min-h-screen bg-background">
-          <Navigation />
-          <main className="max-w-7xl mx-auto px-6 py-8">
-            <Router />
-          </main>
-        </div>
-        <Toaster />
-      </TooltipProvider>
+      <WalletProvider>
+        <TooltipProvider>
+          <div className="min-h-screen bg-background">
+            <Navigation />
+            <main className="max-w-7xl mx-auto px-6 py-8">
+              <Router />
+            </main>
+          </div>
+          <Toaster />
+        </TooltipProvider>
+      </WalletProvider>
     </QueryClientProvider>
   );
 }

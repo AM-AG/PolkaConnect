@@ -2,16 +2,14 @@ import { BalanceCard } from "@/components/BalanceCard";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Wallet as WalletIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useWallet } from "@/hooks/useWallet";
-import { useBalances } from "@/hooks/useBalances";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
+import { useMultiChainBalances } from "@/hooks/useMultiChainBalances";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Assets() {
   const { toast } = useToast();
-  const { selectedAccount, isConnected } = useWallet();
-  const { data: balances, isLoading, refetch, isFetching } = useBalances(
-    selectedAccount?.address || null
-  );
+  const { walletState, isAnyConnected } = useMultiWallet();
+  const { data: balances, isLoading, refetch, isFetching } = useMultiChainBalances(walletState);
 
   const handleRefreshAll = async () => {
     console.log("Refreshing all balances");
@@ -43,13 +41,13 @@ export default function Assets() {
     return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
   };
 
-  if (!isConnected) {
+  if (!isAnyConnected) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Alert className="max-w-md">
           <WalletIcon className="h-4 w-4" />
           <AlertDescription>
-            Please connect your Polkadot wallet to view your multi-chain assets.
+            Please connect your wallet (Polkadot or MetaMask) to view your multi-chain assets.
           </AlertDescription>
         </Alert>
       </div>

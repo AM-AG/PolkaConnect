@@ -11,11 +11,8 @@ import { Wallet } from "lucide-react";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { walletState, isConnected } = useMultiWallet();
-  const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useMultiChainBalances(
-    walletState.address,
-    walletState.type
-  );
+  const { walletState, isAnyConnected } = useMultiWallet();
+  const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useMultiChainBalances(walletState);
   const { data: proposals, isLoading: proposalsLoading } = useGovernance();
   const { data: xcmChannels } = useXcmData();
 
@@ -36,13 +33,13 @@ export default function Dashboard() {
     });
   };
 
-  if (!isConnected) {
+  if (!isAnyConnected) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Alert className="max-w-md">
           <Wallet className="h-4 w-4" />
           <AlertDescription>
-            Please connect your Polkadot wallet to view your dashboard and balances.
+            Please connect your wallet (Polkadot or MetaMask) to view your dashboard and balances.
           </AlertDescription>
         </Alert>
       </div>
