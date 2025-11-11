@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import { web3Accounts, web3Enable } from "@polkadot/extension-dapp";
-import { ethers, BrowserProvider } from "ethers";
 
-export type WalletType = "polkadot" | "ethereum" | null;
-
-interface PolkadotAccount {
+export interface PolkadotAccount {
   address: string;
   meta: {
     name?: string;
@@ -13,18 +10,28 @@ interface PolkadotAccount {
 }
 
 export interface WalletState {
-  type: WalletType;
-  address: string | null;
-  polkadotAccounts: PolkadotAccount[];
-  ethereumAddress: string | null;
+  polkadot: {
+    connected: boolean;
+    address: string | null;
+    accounts: PolkadotAccount[];
+  };
+  ethereum: {
+    connected: boolean;
+    address: string | null;
+  };
 }
 
 export function useMultiWallet() {
   const [walletState, setWalletState] = useState<WalletState>({
-    type: null,
-    address: null,
-    polkadotAccounts: [],
-    ethereumAddress: null,
+    polkadot: {
+      connected: false,
+      address: null,
+      accounts: [],
+    },
+    ethereum: {
+      connected: false,
+      address: null,
+    },
   });
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,17 +89,20 @@ export function useMultiWallet() {
         );
       }
 
-      setWalletState({
-        type: "polkadot",
-        address: accounts[0].address,
-        polkadotAccounts: accounts,
-        ethereumAddress: null,
-      });
+      setWalletState(prev => ({
+        ...prev,
+        polkadot: {
+          connected: true,
+          address: accounts[0].address,
+          accounts: accounts,
+        },
+      }));
 
-      localStorage.setItem("polkaconnect_wallet_type", "polkadot");
+      localStorage.setItem("polkaconnect_polkadot_connected", "true");
       localStorage.setItem("polkaconnect_polkadot_address", accounts[0].address);
 
       console.log("✅ Connected to Polkadot wallet:", accounts[0].address);
+      
       return accounts[0];
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to connect Polkadot wallet";
@@ -120,29 +130,35 @@ export function useMultiWallet() {
         );
       }
 
-      const provider = new BrowserProvider(window.ethereum);
-      const accounts = await provider.send("eth_requestAccounts", []);
+      // Request account access using the standard MetaMask API
+      const accounts = await window.ethereum.request({ 
+        method: 'eth_requestAccounts' 
+      }) as string[];
 
-      if (accounts.length === 0) {
+      console.log(`Found ${accounts.length} MetaMask account(s)`);
+
+      if (!accounts || accounts.length === 0) {
         throw new Error("No Ethereum accounts found. Please create an account in MetaMask.");
       }
 
       const address = accounts[0];
 
-      setWalletState({
-        type: "ethereum",
-        address,
-        polkadotAccounts: [],
-        ethereumAddress: address,
-      });
+      setWalletState(prev => ({
+        ...prev,
+        ethereum: {
+          connected: true,
+          address,
+        },
+      }));
 
-      localStorage.setItem("polkaconnect_wallet_type", "ethereum");
+      localStorage.setItem("polkaconnect_ethereum_connected", "true");
       localStorage.setItem("polkaconnect_ethereum_address", address);
 
       console.log("✅ Connected to MetaMask:", address);
+      
       return address;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to connect MetaMask";
+      const errorMessage = err instanceof Error ? err.message : "Failed to connect to MetaMask";
       setError(errorMessage);
       console.error("MetaMask connection error:", err);
       throw err;
@@ -151,26 +167,59 @@ export function useMultiWallet() {
     }
   };
 
-  const disconnectWallet = () => {
-    setWalletState({
-      type: null,
-      address: null,
-      polkadotAccounts: [],
-      ethereumAddress: null,
-    });
-    setError(null);
-    localStorage.removeItem("polkaconnect_wallet_type");
+  const disconnectPolkadot = () => {
+    setWalletState(prev => ({
+      ...prev,
+      polkadot: {
+        connected: false,
+        address: null,
+        accounts: [],
+      },
+    }));
+    localStorage.removeItem("polkaconnect_polkadot_connected");
     localStorage.removeItem("polkaconnect_polkadot_address");
-    localStorage.removeItem("polkaconnect_ethereum_address");
-    console.log("Wallet disconnected");
+    console.log("Polkadot wallet disconnected");
   };
 
-  // Auto-reconnect on mount
+  const disconnectEthereum = () => {
+    setWalletState(prev => ({
+      ...prev,
+      ethereum: {
+        connected: false,
+        address: null,
+      },
+    }));
+    localStorage.removeItem("polkaconnect_ethereum_connected");
+    localStorage.removeItem("polkaconnect_ethereum_address");
+    console.log("Ethereum wallet disconnected");
+  };
+
+  const disconnectAll = () => {
+    disconnectPolkadot();
+    disconnectEthereum();
+    setError(null);
+  };
+
+  // Auto-reconnect on mount with localStorage migration
   useEffect(() => {
-    const walletType = localStorage.getItem("polkaconnect_wallet_type");
-    if (walletType === "polkadot") {
+    // Migrate from old single-wallet format
+    const oldWalletType = localStorage.getItem("polkaconnect_wallet_type");
+    if (oldWalletType) {
+      if (oldWalletType === "polkadot") {
+        localStorage.setItem("polkaconnect_polkadot_connected", "true");
+      } else if (oldWalletType === "ethereum") {
+        localStorage.setItem("polkaconnect_ethereum_connected", "true");
+      }
+      localStorage.removeItem("polkaconnect_wallet_type");
+    }
+
+    const polkadotConnected = localStorage.getItem("polkaconnect_polkadot_connected");
+    const ethereumConnected = localStorage.getItem("polkaconnect_ethereum_connected");
+    
+    if (polkadotConnected === "true") {
       connectPolkadot().catch(console.error);
-    } else if (walletType === "ethereum") {
+    }
+    if (ethereumConnected === "true") {
       connectEthereum().catch(console.error);
     }
   }, []);
@@ -181,7 +230,11 @@ export function useMultiWallet() {
     error,
     connectPolkadot,
     connectEthereum,
-    disconnectWallet,
-    isConnected: walletState.address !== null,
+    disconnectPolkadot,
+    disconnectEthereum,
+    disconnectAll,
+    isPolkadotConnected: walletState.polkadot.connected,
+    isEthereumConnected: walletState.ethereum.connected,
+    isAnyConnected: walletState.polkadot.connected || walletState.ethereum.connected,
   };
 }

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { ethers, BrowserProvider } from "ethers";
 import { getCachedData, setCachedData } from "@/lib/cache";
+import type { WalletState } from "./useMultiWallet";
 
 export interface ChainBalance {
   chainId: string;
@@ -24,7 +25,8 @@ async function getPolkadotBalance(address: string): Promise<ChainBalance> {
     const accountInfo = await api.query.system.account(address);
     const accountData = accountInfo.toJSON() as any;
     const free = accountData?.data?.free || '0';
-    const divisor = BigInt(10) ** BigInt(10); // DOT has 10 decimals
+    // DOT has 10 decimals - calculate 10^10 using BigInt multiplication
+    const divisor = BigInt(10000000000); // 10^10
     const balance = (BigInt(free) / divisor).toString();
     const usdValue = (parseFloat(balance) * 7.5).toFixed(2); // Mock price
 
@@ -94,45 +96,49 @@ async function getEthereumBalance(address: string): Promise<ChainBalance> {
   }
 }
 
-export function useMultiChainBalances(address: string | null, walletType: "polkadot" | "ethereum" | null) {
+export function useMultiChainBalances(walletState: WalletState) {
   return useQuery({
-    queryKey: ["/api/multichain/balances", address, walletType],
+    queryKey: ["/api/multichain/balances", walletState.polkadot.address, walletState.ethereum.address],
     queryFn: async () => {
-      if (!address || !walletType) {
-        return [];
-      }
+      const balances: ChainBalance[] = [];
 
-      const cacheKey = `multichain_balances_${walletType}_${address}`;
-      const cached = getCachedData<ChainBalance[]>(cacheKey);
+      // Fetch Polkadot balance if connected
+      if (walletState.polkadot.connected && walletState.polkadot.address) {
+        const cacheKey = `polkadot_balance_${walletState.polkadot.address}`;
+        const cached = getCachedData<ChainBalance>(cacheKey);
 
-      try {
-        const balances: ChainBalance[] = [];
-
-        if (walletType === "polkadot") {
-          // Fetch Polkadot and its parachains
-          const dotBalance = await getPolkadotBalance(address);
+        try {
+          const dotBalance = await getPolkadotBalance(walletState.polkadot.address);
+          setCachedData(cacheKey, dotBalance);
           balances.push(dotBalance);
-
-          // You can add Astar, Moonbeam etc here
-        } else if (walletType === "ethereum") {
-          // Fetch Ethereum balance
-          const ethBalance = await getEthereumBalance(address);
-          balances.push(ethBalance);
-
-          // You can add other EVM chains here
+        } catch (error) {
+          console.error("Polkadot balance fetch error:", error);
+          if (cached) {
+            balances.push({ ...cached.data, status: "cached" as const });
+          }
         }
-
-        setCachedData(cacheKey, balances);
-        return balances;
-      } catch (error) {
-        console.error("Multi-chain balance fetch error:", error);
-        if (cached) {
-          return cached.data.map((b: ChainBalance) => ({ ...b, status: "cached" as const }));
-        }
-        return [];
       }
+
+      // Fetch Ethereum balance if connected
+      if (walletState.ethereum.connected && walletState.ethereum.address) {
+        const cacheKey = `ethereum_balance_${walletState.ethereum.address}`;
+        const cached = getCachedData<ChainBalance>(cacheKey);
+
+        try {
+          const ethBalance = await getEthereumBalance(walletState.ethereum.address);
+          setCachedData(cacheKey, ethBalance);
+          balances.push(ethBalance);
+        } catch (error) {
+          console.error("Ethereum balance fetch error:", error);
+          if (cached) {
+            balances.push({ ...cached.data, status: "cached" as const });
+          }
+        }
+      }
+
+      return balances;
     },
-    enabled: !!address && !!walletType,
+    enabled: walletState.polkadot.connected || walletState.ethereum.connected,
     refetchInterval: 60000, // Refresh every minute
     staleTime: 30000,
   });

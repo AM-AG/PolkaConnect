@@ -6,14 +6,36 @@ import { useGovernance } from "@/hooks/useGovernance";
 import { useXcmData } from "@/hooks/useXcmData";
 
 export function MultiChainStats() {
-  const { walletState } = useMultiWallet();
-  const { data: balances } = useMultiChainBalances(walletState.address, walletState.type);
+  const { walletState, isAnyConnected } = useMultiWallet();
+  const { data: balances } = useMultiChainBalances(walletState);
   const { data: proposals } = useGovernance();
   const { data: xcmChannels } = useXcmData();
 
   const totalValue = balances?.reduce((sum, b) => sum + parseFloat(b.usdValue || "0"), 0) || 0;
   const activeProposals = proposals?.length || 0;
   const activeChannels = xcmChannels?.filter(c => c.active).length || 0;
+
+  const getNetworkStatus = () => {
+    if (walletState.polkadot.connected && walletState.ethereum.connected) {
+      return "Dual Chain";
+    }
+    if (walletState.polkadot.connected) {
+      return "Polkadot";
+    }
+    if (walletState.ethereum.connected) {
+      return "Ethereum";
+    }
+    return "Disconnected";
+  };
+
+  const getNetworkDescription = () => {
+    const connected = [];
+    if (walletState.polkadot.connected) connected.push("DOT");
+    if (walletState.ethereum.connected) connected.push("ETH");
+    
+    if (connected.length === 0) return "Connect wallet";
+    return connected.join(" + ");
+  };
 
   const stats = [
     {
@@ -39,8 +61,8 @@ export function MultiChainStats() {
     },
     {
       title: "Network Status",
-      value: walletState.address ? "Online" : "Disconnected",
-      description: walletState.type ? `${walletState.type} network` : "Connect wallet",
+      value: getNetworkStatus(),
+      description: getNetworkDescription(),
       icon: Activity,
       testId: "stat-network-status",
     },

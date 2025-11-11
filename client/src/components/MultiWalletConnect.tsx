@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Wallet, Copy, LogOut, Circle } from "lucide-react";
+import { Copy, LogOut, Circle } from "lucide-react";
 import { SiPolkadot, SiEthereum } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
@@ -17,8 +17,10 @@ export function MultiWalletConnect() {
     isConnecting,
     connectPolkadot,
     connectEthereum,
-    disconnectWallet,
-    isConnected,
+    disconnectPolkadot,
+    disconnectEthereum,
+    isPolkadotConnected,
+    isEthereumConnected,
   } = useMultiWallet();
 
   const handleConnectPolkadot = async () => {
@@ -53,22 +55,28 @@ export function MultiWalletConnect() {
     }
   };
 
-  const handleDisconnect = () => {
-    disconnectWallet();
+  const handleDisconnectPolkadot = () => {
+    disconnectPolkadot();
     toast({
-      title: "Wallet Disconnected",
-      description: "Your wallet has been disconnected",
+      title: "Polkadot Disconnected",
+      description: "Your Polkadot wallet has been disconnected",
     });
   };
 
-  const copyAddress = () => {
-    if (walletState.address) {
-      navigator.clipboard.writeText(walletState.address);
-      toast({
-        title: "Address Copied",
-        description: "Wallet address copied to clipboard",
-      });
-    }
+  const handleDisconnectEthereum = () => {
+    disconnectEthereum();
+    toast({
+      title: "MetaMask Disconnected",
+      description: "Your Ethereum wallet has been disconnected",
+    });
+  };
+
+  const copyAddress = (address: string, name: string) => {
+    navigator.clipboard.writeText(address);
+    toast({
+      title: "Address Copied",
+      description: `${name} address copied to clipboard`,
+    });
   };
 
   const truncateAddress = (addr: string) => {
@@ -76,9 +84,10 @@ export function MultiWalletConnect() {
     return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
   };
 
-  if (!isConnected) {
-    return (
-      <div className="flex gap-2">
+  return (
+    <div className="flex gap-2">
+      {/* Polkadot Wallet */}
+      {!isPolkadotConnected ? (
         <Button
           onClick={handleConnectPolkadot}
           data-testid="button-connect-polkadot"
@@ -88,6 +97,38 @@ export function MultiWalletConnect() {
           <SiPolkadot className="h-4 w-4" />
           {isConnecting ? "Connecting..." : "Connect Polkadot"}
         </Button>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" data-testid="button-polkadot-menu" className="gap-2">
+              <SiPolkadot className="h-4 w-4" />
+              <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+              <span className="font-mono text-sm">
+                {truncateAddress(walletState.polkadot.address || "")}
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72">
+            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+              Connected to Polkadot
+            </div>
+            <DropdownMenuItem 
+              onClick={() => copyAddress(walletState.polkadot.address || "", "Polkadot")} 
+              data-testid="button-copy-polkadot-address"
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              <span className="font-mono text-xs truncate">{walletState.polkadot.address}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDisconnectPolkadot} data-testid="button-disconnect-polkadot">
+              <LogOut className="h-4 w-4 mr-2" />
+              Disconnect
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* Ethereum Wallet */}
+      {!isEthereumConnected ? (
         <Button
           onClick={handleConnectEthereum}
           data-testid="button-connect-ethereum"
@@ -98,37 +139,35 @@ export function MultiWalletConnect() {
           <SiEthereum className="h-4 w-4" />
           MetaMask
         </Button>
-      </div>
-    );
-  }
-
-  const walletIcon = walletState.type === "polkadot" ? <SiPolkadot className="h-4 w-4" /> : <SiEthereum className="h-4 w-4" />;
-  const walletName = walletState.type === "polkadot" ? "Polkadot" : "Ethereum";
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" data-testid="button-wallet-menu" className="gap-2">
-          {walletIcon}
-          <Circle className="h-2 w-2 fill-green-500 text-green-500" />
-          <span className="font-mono text-sm">
-            {truncateAddress(walletState.address || "")}
-          </span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">
-          Connected to {walletName}
-        </div>
-        <DropdownMenuItem onClick={copyAddress} data-testid="button-copy-address">
-          <Copy className="h-4 w-4 mr-2" />
-          <span className="font-mono text-xs truncate">{walletState.address}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleDisconnect} data-testid="button-disconnect">
-          <LogOut className="h-4 w-4 mr-2" />
-          Disconnect
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" data-testid="button-ethereum-menu" className="gap-2">
+              <SiEthereum className="h-4 w-4" />
+              <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+              <span className="font-mono text-sm">
+                {truncateAddress(walletState.ethereum.address || "")}
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72">
+            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+              Connected to Ethereum
+            </div>
+            <DropdownMenuItem 
+              onClick={() => copyAddress(walletState.ethereum.address || "", "Ethereum")} 
+              data-testid="button-copy-ethereum-address"
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              <span className="font-mono text-xs truncate">{walletState.ethereum.address}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDisconnectEthereum} data-testid="button-disconnect-ethereum">
+              <LogOut className="h-4 w-4 mr-2" />
+              Disconnect
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
   );
 }
