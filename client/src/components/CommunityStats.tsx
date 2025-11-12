@@ -1,8 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Activity, Vote, GitBranch } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useGovernance } from "@/hooks/useGovernance";
-import { useXcmData } from "@/hooks/useXcmData";
 
 interface CommunityData {
   totalWallets: number;
@@ -12,10 +10,7 @@ interface CommunityData {
 }
 
 export function CommunityStats() {
-  const { data: proposals } = useGovernance();
-  const { data: xcmChannels } = useXcmData();
-
-  const { data: rawStats } = useQuery({
+  const { data: rawStats, isLoading, error } = useQuery({
     queryKey: ["/api/stats/community"],
     queryFn: async () => {
       const response = await fetch("/api/stats/community");
@@ -26,11 +21,44 @@ export function CommunityStats() {
     staleTime: 30000,
   });
 
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
+              <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 w-16 bg-muted rounded animate-pulse mb-2" />
+              <div className="h-3 w-32 bg-muted rounded animate-pulse" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="md:col-span-2 lg:col-span-4">
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">
+              Unable to load community stats. Please try again later.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const communityData: CommunityData = {
-    totalWallets: rawStats?.totalWallets || 0,
-    totalTransactions: rawStats?.totalTransactions || 0,
-    activeProposals: rawStats?.activeProposals || proposals?.length || 0,
-    parachainCount: rawStats?.parachainCount || xcmChannels?.length || 0,
+    totalWallets: rawStats?.totalWallets ?? 0,
+    totalTransactions: rawStats?.totalTransactions ?? 0,
+    activeProposals: rawStats?.activeProposals ?? 0,
+    parachainCount: rawStats?.parachainCount ?? 0,
   };
 
   const stats = [
