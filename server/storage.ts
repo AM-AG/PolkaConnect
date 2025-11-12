@@ -51,6 +51,10 @@ export interface IStorage {
   getTransactionsByWallet(walletAddress: string, limit?: number): Promise<TransactionHistory[]>;
   getTransactionByHash(txHash: string): Promise<TransactionHistory | undefined>;
   updateTransactionStatus(id: string, status: "pending" | "completed" | "failed"): Promise<TransactionHistory | undefined>;
+  
+  // Community Stats
+  getTotalTransactionCount(): Promise<number>;
+  getUniqueWalletCount(): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -282,6 +286,18 @@ export class MemStorage implements IStorage {
       this.transactionHistoryMap.set(id, tx);
     }
     return tx;
+  }
+
+  async getTotalTransactionCount(): Promise<number> {
+    return this.transactionHistoryMap.size;
+  }
+
+  async getUniqueWalletCount(): Promise<number> {
+    const uniqueWallets = new Set<string>();
+    for (const tx of this.transactionHistoryMap.values()) {
+      uniqueWallets.add(tx.walletAddress);
+    }
+    return uniqueWallets.size;
   }
 }
 

@@ -47,6 +47,10 @@ export default function TransferPage() {
       });
       setAmount("");
       setDestinationAddress("");
+      
+      if (walletState.polkadot.address) {
+        queryClient.invalidateQueries({ queryKey: ["/api/history", walletState.polkadot.address] });
+      }
     },
     onError: (error: Error) => {
       toast({

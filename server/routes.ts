@@ -372,15 +372,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Community Stats endpoint
   app.get("/api/stats/community", async (req, res) => {
     try {
-      // This would query the Polkadot chain for real stats
-      // For now, returning mock data
+      // Get real data from storage
+      const proposals = storage.getCachedProposals() || [];
+      const xcmChannels = storage.getCachedXcmData() || [];
+      const totalTransactions = await storage.getTotalTransactionCount();
+      const totalWallets = await storage.getUniqueWalletCount();
+      
       res.json({ 
         success: true, 
         data: {
-          totalParachains: 50,
-          activeProposals: 12,
-          totalStaked: "345,678,901 DOT",
-          activeValidators: 297,
+          totalWallets,
+          totalTransactions,
+          activeProposals: proposals.length,
+          parachainCount: xcmChannels.length,
           lastUpdated: new Date().toISOString()
         }
       });

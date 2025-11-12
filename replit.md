@@ -7,12 +7,18 @@ PolkaConnect is a fully functional multi-chain control hub supporting both Polka
 **Status**: Production-ready multi-chain hub with advanced UI/UX features.
 
 **Recent Updates (Nov 12, 2025)**:
+- ✅ **Cross-Chain Transfer System**: XCM-based DOT transfer page with destination chain selection, amount input, wallet validation, and transaction history integration
+- ✅ **Transaction History**: Complete transaction tracking with database persistence, status updates (pending/completed/failed), and dedicated history page with filtering
+- ✅ **Community Stats Dashboard**: Enhanced dashboard with community metrics showing active wallets, total transactions, active proposals, and connected parachains
+- ✅ **Navigation Enhancement**: Updated sidebar with Transfer (Core section) and History (Core section) pages with proper icons and routing
+- ✅ **API Endpoints**: Added `/api/transfer/xcm` (POST) for initiating transfers, `/api/history/:walletAddress` (GET) for transaction history, `/api/stats/community` (GET) for community metrics
+- ✅ **Cache Invalidation**: Automatic query invalidation after successful transfers to refresh transaction history
 - ✅ **Balance Verification for Swaps**: Pre-swap validation with button disabling when insufficient balance, real-time balance display, MAX button, and toast notifications
 - ✅ **Real-Time Exchange Rates**: CoinGecko API integration for live DOT/ETH prices with 30-second refresh, USD value display, and accurate swap calculations
 - ✅ **Numeric Balance Field**: Added `balanceNumeric` to ChainBalance interface for reliable numeric comparisons, eliminating fragile string parsing
 - ✅ **Cache Backwards Compatibility**: Automatic computation of missing balanceNumeric for old cached entries, ensuring reliable balance verification
 - ✅ **Layout Improvements**: Added padding (p-6) between page content and sidebar for better visual spacing
-- ✅ **Grouped Sidebar Navigation**: Organized navigation with Core (Dashboard, Assets, Swap) and Polkadot Network (Staking, Governance, Network, Transactions) sections
+- ✅ **Grouped Sidebar Navigation**: Organized navigation with Core (Dashboard, Assets, Swap, Transfer, History) and Polkadot Network (Staking, Governance, Network, Transactions) sections
 - ✅ **Cross-Chain Swap Page**: Interactive UI for DOT ↔ ETH transfers with Snowbridge integration placeholder
 - ✅ **Live Transactions Feed**: Real-time Polkadot blockchain monitoring with WebSocket connection, user filtering, and transaction details
 - ✅ **Staking Tab**: Complete staking dashboard showing bonded balance, nominations, unlocking schedule, and rewards
@@ -51,9 +57,11 @@ Preferred communication style: Simple, everyday language.
 - Component patterns: Card-based UI following blockchain explorer conventions
 
 **Key Pages**:
-- **Dashboard**: Overview with stats, recent balances, and governance proposals
+- **Dashboard**: Overview with stats, community metrics, recent balances, and governance proposals
 - **Assets**: Detailed multi-chain balance view with DOT, ASTR, GLMR, ETH
 - **Swap**: Cross-chain token exchange interface (DOT ↔ ETH) with Snowbridge placeholder
+- **Transfer**: XCM-based cross-chain DOT transfers with destination chain selection and wallet validation
+- **History**: Transaction history viewer with status tracking and filtering by wallet address
 - **Staking**: Bonded balance, active nominations, unlocking schedule, rewards dashboard
 - **Governance**: List and vote on OpenGov proposals
 - **Network**: Visual topology map of parachain connections
@@ -73,6 +81,9 @@ Preferred communication style: Simple, everyday language.
 - `/api/assets/:address` - Fetch balances across all configured chains for a given address
 - `/api/governance` - Retrieve active referenda from Polkadot OpenGov
 - `/api/network` - Get network status for all parachain nodes
+- `/api/transfer/xcm` - Initiate cross-chain DOT transfers via XCM (POST)
+- `/api/history/:walletAddress` - Retrieve transaction history for a wallet address
+- `/api/stats/community` - Get community metrics (parachains, proposals, validators)
 
 **Data Flow**:
 - Server polls parachain RPCs directly using Polkadot.js API

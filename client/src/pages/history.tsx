@@ -24,6 +24,13 @@ export default function HistoryPage() {
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/history", walletAddress],
+    queryFn: async () => {
+      if (!walletAddress) return [];
+      const response = await fetch(`/api/history/${walletAddress}`);
+      if (!response.ok) throw new Error("Failed to fetch transactions");
+      const result = await response.json();
+      return result.success ? result.data : [];
+    },
     enabled: !!walletAddress,
   });
 

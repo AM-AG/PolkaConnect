@@ -1,4 +1,5 @@
 import { MultiChainStats } from "@/components/MultiChainStats";
+import { CommunityStats } from "@/components/CommunityStats";
 import { BalanceCard } from "@/components/BalanceCard";
 import { ProposalCard } from "@/components/ProposalCard";
 import { useToast } from "@/hooks/use-toast";
@@ -68,6 +69,11 @@ export default function Dashboard() {
       </div>
 
       <MultiChainStats />
+
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">Community Overview</h2>
+        <CommunityStats />
+      </div>
 
       <div>
         <h2 className="text-2xl font-semibold mb-4">Chain Balances</h2>
