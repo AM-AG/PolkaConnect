@@ -9,6 +9,7 @@ export interface ChainBalance {
   chainId: string;
   chainName: string;
   balance: string;
+  balanceNumeric: number;
   usdValue: string;
   symbol: string;
   lastUpdated: string;
@@ -39,12 +40,14 @@ async function getSubstrateBalance(
     // Format with proper decimals (e.g., "123.456789")
     const fractionalStr = fractionalPart.toString().padStart(config.decimals, "0");
     const balance = `${wholePart}.${fractionalStr}`.replace(/\.?0+$/, "") || "0";
-    const usdValue = (parseFloat(balance) * (config.mockUsdPrice || 0)).toFixed(2);
+    const balanceNumeric = parseFloat(balance);
+    const usdValue = (balanceNumeric * (config.mockUsdPrice || 0)).toFixed(2);
 
     return {
       chainId: config.id,
       chainName: config.name,
       balance,
+      balanceNumeric,
       usdValue,
       symbol: config.symbol,
       lastUpdated: new Date().toISOString(),
@@ -56,6 +59,7 @@ async function getSubstrateBalance(
       chainId: config.id,
       chainName: config.name,
       balance: "0",
+      balanceNumeric: 0,
       usdValue: "0",
       symbol: config.symbol,
       lastUpdated: new Date().toISOString(),
@@ -84,12 +88,14 @@ async function getEvmBalance(
 
     const balance = await provider.getBalance(address);
     const balanceInEth = ethers.formatUnits(balance, config.decimals);
-    const usdValue = (parseFloat(balanceInEth) * (config.mockUsdPrice || 0)).toFixed(2);
+    const balanceNumeric = parseFloat(balanceInEth);
+    const usdValue = (balanceNumeric * (config.mockUsdPrice || 0)).toFixed(2);
 
     return {
       chainId: config.id,
       chainName: config.name,
       balance: balanceInEth,
+      balanceNumeric,
       usdValue,
       symbol: config.symbol,
       lastUpdated: new Date().toISOString(),
@@ -101,6 +107,7 @@ async function getEvmBalance(
       chainId: config.id,
       chainName: config.name,
       balance: "0",
+      balanceNumeric: 0,
       usdValue: "0",
       symbol: config.symbol,
       lastUpdated: new Date().toISOString(),
@@ -132,13 +139,19 @@ export function useMultiChainBalances(walletState: WalletState) {
             } catch (error) {
               console.debug(`${config.name} balance fetch failed, using cache:`, error);
               if (cached) {
-                return { ...cached.data, status: "cached" as const };
+                // Ensure cached data has balanceNumeric (for backwards compatibility)
+                const cachedBalance = cached.data;
+                if (cachedBalance.balanceNumeric === undefined) {
+                  cachedBalance.balanceNumeric = parseFloat(cachedBalance.balance) || 0;
+                }
+                return { ...cachedBalance, status: "cached" as const };
               }
               // Return offline placeholder
               return {
                 chainId: config.id,
                 chainName: config.name,
                 balance: "0",
+                balanceNumeric: 0,
                 usdValue: "0",
                 symbol: config.symbol,
                 lastUpdated: new Date().toISOString(),
@@ -171,12 +184,18 @@ export function useMultiChainBalances(walletState: WalletState) {
         } catch (error) {
           console.debug("Ethereum balance fetch failed, using cache:", error);
           if (ethCached) {
-            balances.push({ ...ethCached.data, status: "cached" as const });
+            // Ensure cached data has balanceNumeric (for backwards compatibility)
+            const cachedBalance = ethCached.data;
+            if (cachedBalance.balanceNumeric === undefined) {
+              cachedBalance.balanceNumeric = parseFloat(cachedBalance.balance) || 0;
+            }
+            balances.push({ ...cachedBalance, status: "cached" as const });
           } else {
             balances.push({
               chainId: ETHEREUM_CONFIG.id,
               chainName: ETHEREUM_CONFIG.name,
               balance: "0",
+              balanceNumeric: 0,
               usdValue: "0",
               symbol: ETHEREUM_CONFIG.symbol,
               lastUpdated: new Date().toISOString(),
@@ -198,12 +217,18 @@ export function useMultiChainBalances(walletState: WalletState) {
             } catch (error) {
               console.debug(`${config.name} balance fetch failed, using cache:`, error);
               if (cached) {
-                return { ...cached.data, status: "cached" as const };
+                // Ensure cached data has balanceNumeric (for backwards compatibility)
+                const cachedBalance = cached.data;
+                if (cachedBalance.balanceNumeric === undefined) {
+                  cachedBalance.balanceNumeric = parseFloat(cachedBalance.balance) || 0;
+                }
+                return { ...cachedBalance, status: "cached" as const };
               }
               return {
                 chainId: config.id,
                 chainName: config.name,
                 balance: "0",
+                balanceNumeric: 0,
                 usdValue: "0",
                 symbol: config.symbol,
                 lastUpdated: new Date().toISOString(),
