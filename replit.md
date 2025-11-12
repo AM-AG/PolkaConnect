@@ -7,6 +7,11 @@ PolkaConnect is a fully functional multi-chain control hub supporting both Polka
 **Status**: Production-ready multi-chain hub with advanced UI/UX features.
 
 **Recent Updates (Nov 12, 2025)**:
+- ✅ **Balance Verification for Swaps**: Pre-swap validation with button disabling when insufficient balance, real-time balance display, MAX button, and toast notifications
+- ✅ **Real-Time Exchange Rates**: CoinGecko API integration for live DOT/ETH prices with 30-second refresh, USD value display, and accurate swap calculations
+- ✅ **Numeric Balance Field**: Added `balanceNumeric` to ChainBalance interface for reliable numeric comparisons, eliminating fragile string parsing
+- ✅ **Cache Backwards Compatibility**: Automatic computation of missing balanceNumeric for old cached entries, ensuring reliable balance verification
+- ✅ **Layout Improvements**: Added padding (p-6) between page content and sidebar for better visual spacing
 - ✅ **Grouped Sidebar Navigation**: Organized navigation with Core (Dashboard, Assets, Swap) and Polkadot Network (Staking, Governance, Network, Transactions) sections
 - ✅ **Cross-Chain Swap Page**: Interactive UI for DOT ↔ ETH transfers with Snowbridge integration placeholder
 - ✅ **Live Transactions Feed**: Real-time Polkadot blockchain monitoring with WebSocket connection, user filtering, and transaction details
