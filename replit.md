@@ -2,11 +2,19 @@
 
 ## Overview
 
-PolkaConnect is a fully functional multi-chain control hub supporting both Polkadot (Substrate) and Ethereum (EVM) ecosystems. Users can connect either Polkadot.js extension or MetaMask wallet to view balances, track governance proposals across chains, monitor cross-chain messaging (XCM) activity, and visualize parachain network topology. The application is designed with resilience in mind, implementing fallback mechanisms and caching to maintain functionality even when individual chains or RPC nodes fail.
+PolkaConnect is a fully functional multi-chain control hub supporting both Polkadot (Substrate) and Ethereum (EVM) ecosystems. Users can connect either Polkadot.js extension or MetaMask wallet to view balances, track governance proposals, monitor staking positions, execute cross-chain swaps, and watch live blockchain transactions. The application features a modern grouped sidebar navigation, real-time blockchain feeds, and comprehensive wallet integration across both ecosystems.
 
-**Status**: Production-ready multi-chain hub. Supports both Polkadot and Ethereum ecosystems.
+**Status**: Production-ready multi-chain hub with advanced UI/UX features.
 
-**Recent Updates (Nov 11, 2025)**:
+**Recent Updates (Nov 12, 2025)**:
+- ✅ **Grouped Sidebar Navigation**: Organized navigation with Core (Dashboard, Assets, Swap) and Polkadot Network (Staking, Governance, Network, Transactions) sections
+- ✅ **Cross-Chain Swap Page**: Interactive UI for DOT ↔ ETH transfers with Snowbridge integration placeholder
+- ✅ **Live Transactions Feed**: Real-time Polkadot blockchain monitoring with WebSocket connection, user filtering, and transaction details
+- ✅ **Staking Tab**: Complete staking dashboard showing bonded balance, nominations, unlocking schedule, and rewards
+- ✅ **Collapsible Sidebar**: Full-height layout with keyboard-accessible navigation
+- ✅ **Performance Optimizations**: Transaction throttling (100 max), proper WebSocket cleanup, SPA-friendly state management
+
+**Previous Updates (Nov 11, 2025)**:
 - ✅ **Multi-Account Selection**: Users can now view and switch between all Polkadot.js wallet accounts
 - ✅ **Account Persistence**: Selected Polkadot account persists across page refreshes via localStorage
 - ✅ **Multi-Parachain Balances**: Simultaneous balance fetching from Polkadot, Astar, and Moonbeam
@@ -38,10 +46,13 @@ Preferred communication style: Simple, everyday language.
 - Component patterns: Card-based UI following blockchain explorer conventions
 
 **Key Pages**:
-- Dashboard: Overview with stats, recent balances, and governance proposals
-- Assets: Detailed multi-chain balance view
-- Governance: List and vote on OpenGov proposals
-- Network: Visual topology map of parachain connections
+- **Dashboard**: Overview with stats, recent balances, and governance proposals
+- **Assets**: Detailed multi-chain balance view with DOT, ASTR, GLMR, ETH
+- **Swap**: Cross-chain token exchange interface (DOT ↔ ETH) with Snowbridge placeholder
+- **Staking**: Bonded balance, active nominations, unlocking schedule, rewards dashboard
+- **Governance**: List and vote on OpenGov proposals
+- **Network**: Visual topology map of parachain connections
+- **Transactions**: Live blockchain transaction feed with real-time updates and user filtering
 
 **Resilience Strategy**:
 - LocalStorage-based caching with 5-minute TTL
