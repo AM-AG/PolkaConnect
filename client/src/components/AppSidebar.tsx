@@ -3,6 +3,8 @@ import {
   LayoutDashboard,
   Wallet,
   ArrowLeftRight,
+  Send,
+  Clock,
   Lock,
   Vote,
   Network,
@@ -38,6 +40,18 @@ const coreItems = [
     url: "/swap",
     icon: ArrowLeftRight,
     testId: "link-swap",
+  },
+  {
+    title: "Transfer",
+    url: "/transfer",
+    icon: Send,
+    testId: "link-transfer",
+  },
+  {
+    title: "History",
+    url: "/history",
+    icon: Clock,
+    testId: "link-history",
   },
 ];
 

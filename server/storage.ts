@@ -9,7 +9,9 @@ import {
   type Comment,
   type InsertComment,
   type UserXp,
-  type InsertUserXp
+  type InsertUserXp,
+  type TransactionHistory,
+  type InsertTransactionHistory
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -43,6 +45,12 @@ export interface IStorage {
   createOrUpdateUserXp(xpData: InsertUserXp): Promise<UserXp>;
   incrementVoteCount(walletAddress: string, xpGain: number): Promise<UserXp>;
   incrementCommentCount(walletAddress: string, xpGain: number): Promise<UserXp>;
+  
+  // Transaction History
+  createTransaction(tx: InsertTransactionHistory): Promise<TransactionHistory>;
+  getTransactionsByWallet(walletAddress: string, limit?: number): Promise<TransactionHistory[]>;
+  getTransactionByHash(txHash: string): Promise<TransactionHistory | undefined>;
+  updateTransactionStatus(id: string, status: "pending" | "completed" | "failed"): Promise<TransactionHistory | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -53,12 +61,14 @@ export class MemStorage implements IStorage {
   private governanceVotes: Map<string, GovernanceVote>;
   private comments: Map<string, Comment>;
   private userXpMap: Map<string, UserXp>;
+  private transactionHistoryMap: Map<string, TransactionHistory>;
 
   constructor() {
     this.users = new Map();
     this.governanceVotes = new Map();
     this.comments = new Map();
     this.userXpMap = new Map();
+    this.transactionHistoryMap = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -230,6 +240,48 @@ export class MemStorage implements IStorage {
 
     this.userXpMap.set(walletAddress, updated);
     return updated;
+  }
+
+  // Transaction History
+  async createTransaction(insertTx: InsertTransactionHistory): Promise<TransactionHistory> {
+    const id = randomUUID();
+    const tx: TransactionHistory = {
+      ...insertTx,
+      id,
+      timestamp: new Date(),
+      fromChain: insertTx.fromChain ?? null,
+      toChain: insertTx.toChain ?? null,
+      amount: insertTx.amount ?? null,
+      asset: insertTx.asset ?? null,
+      metadata: insertTx.metadata ?? null,
+    };
+    this.transactionHistoryMap.set(id, tx);
+    return tx;
+  }
+
+  async getTransactionsByWallet(walletAddress: string, limit = 50): Promise<TransactionHistory[]> {
+    return Array.from(this.transactionHistoryMap.values())
+      .filter((tx) => tx.walletAddress === walletAddress)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+  }
+
+  async getTransactionByHash(txHash: string): Promise<TransactionHistory | undefined> {
+    return Array.from(this.transactionHistoryMap.values()).find(
+      (tx) => tx.txHash === txHash
+    );
+  }
+
+  async updateTransactionStatus(
+    id: string,
+    status: "pending" | "completed" | "failed"
+  ): Promise<TransactionHistory | undefined> {
+    const tx = this.transactionHistoryMap.get(id);
+    if (tx) {
+      tx.status = status;
+      this.transactionHistoryMap.set(id, tx);
+    }
+    return tx;
   }
 }
 

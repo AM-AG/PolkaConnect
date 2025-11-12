@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { fetchAllBalances, getNetworkStatus } from "./services/polkadot";
 import { fetchReferenda } from "./services/governance";
 import { getStakingInfo, getStakingRewards } from "./services/staking";
-import { insertGovernanceVoteSchema, insertCommentSchema } from "@shared/schema";
+import { insertGovernanceVoteSchema, insertCommentSchema, insertTransactionHistorySchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Assets/Balances endpoint
@@ -279,6 +279,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching user XP:", error);
       res.status(500).json({ 
         error: "Failed to fetch user XP" 
+      });
+    }
+  });
+
+  // Transaction History endpoints
+  app.post("/api/history", async (req, res) => {
+    try {
+      const txData = insertTransactionHistorySchema.parse(req.body);
+      const tx = await storage.createTransaction(txData);
+      
+      res.json({ 
+        success: true, 
+        data: tx 
+      });
+    } catch (error) {
+      console.error("Error creating transaction:", error);
+      res.status(400).json({ 
+        error: "Failed to create transaction",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/history/:walletAddress", async (req, res) => {
+    try {
+      const { walletAddress } = req.params;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const transactions = await storage.getTransactionsByWallet(walletAddress, limit);
+      
+      res.json({ 
+        success: true, 
+        data: transactions 
+      });
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch transactions" 
+      });
+    }
+  });
+
+  // XCM Transfer endpoint (stub - actual implementation requires signing)
+  app.post("/api/transfer/xcm", async (req, res) => {
+    try {
+      const { fromAddress, toChain, amount, destinationAddress } = req.body;
+      
+      if (!fromAddress || !toChain || !amount || !destinationAddress) {
+        return res.status(400).json({ 
+          error: "Missing required fields" 
+        });
+      }
+
+      // Generate a mock transaction hash for now
+      const mockTxHash = `0x${Math.random().toString(16).slice(2, 66).padEnd(64, '0')}`;
+      
+      // Store transaction in history
+      const tx = await storage.createTransaction({
+        walletAddress: fromAddress,
+        txHash: mockTxHash,
+        type: "transfer",
+        fromChain: "polkadot",
+        toChain,
+        amount,
+        asset: "DOT",
+        status: "pending",
+      });
+      
+      // In a real implementation, this would:
+      // 1. Connect to Polkadot.js API
+      // 2. Build XCM message
+      // 3. Sign with extension
+      // 4. Submit transaction
+      // 5. Update status based on finalization
+      
+      res.json({ 
+        success: true, 
+        data: {
+          txHash: mockTxHash,
+          message: "XCM transfer initiated (mock implementation - signature required for production)"
+        }
+      });
+    } catch (error) {
+      console.error("Error initiating XCM transfer:", error);
+      res.status(500).json({ 
+        error: "Failed to initiate transfer",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Community Stats endpoint
+  app.get("/api/stats/community", async (req, res) => {
+    try {
+      // This would query the Polkadot chain for real stats
+      // For now, returning mock data
+      res.json({ 
+        success: true, 
+        data: {
+          totalParachains: 50,
+          activeProposals: 12,
+          totalStaked: "345,678,901 DOT",
+          activeValidators: 297,
+          lastUpdated: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching community stats:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch community stats" 
       });
     }
   });

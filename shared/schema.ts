@@ -110,6 +110,32 @@ export type Comment = typeof comments.$inferSelect;
 export type InsertUserXp = z.infer<typeof insertUserXpSchema>;
 export type UserXp = typeof userXp.$inferSelect;
 
+// Transaction history table
+export const transactionHistory = pgTable("transaction_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  walletAddress: text("wallet_address").notNull(),
+  txHash: text("tx_hash").notNull(),
+  type: text("type").notNull(), // "transfer" | "swap" | "stake" | "vote"
+  fromChain: text("from_chain"),
+  toChain: text("to_chain"),
+  amount: text("amount"),
+  asset: text("asset"), // DOT, ETH, ASTR, etc.
+  status: text("status").notNull(), // "pending" | "completed" | "failed"
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  metadata: text("metadata"), // JSON string for additional data
+});
+
+export const insertTransactionHistorySchema = createInsertSchema(transactionHistory).omit({
+  id: true,
+  timestamp: true,
+}).extend({
+  type: z.enum(["transfer", "swap", "stake", "vote"]),
+  status: z.enum(["pending", "completed", "failed"]),
+});
+
+export type InsertTransactionHistory = z.infer<typeof insertTransactionHistorySchema>;
+export type TransactionHistory = typeof transactionHistory.$inferSelect;
+
 // Staking data interfaces (not persisted, fetched from chain)
 export interface StakingInfo {
   walletAddress: string;
@@ -124,5 +150,14 @@ export interface StakingInfo {
     era: number;
   }[];
   status: "online" | "loading" | "error";
+  lastUpdated: string;
+}
+
+// Community stats interfaces (fetched from chain)
+export interface CommunityStats {
+  totalParachains: number;
+  activeProposals: number;
+  totalStaked: string;
+  activeValidators: number;
   lastUpdated: string;
 }
