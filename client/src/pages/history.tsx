@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useWallet } from "@/hooks/useWallet";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, ArrowRight, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
@@ -19,7 +19,7 @@ interface Transaction {
 }
 
 export default function HistoryPage() {
-  const walletState = useWallet();
+  const { walletState } = useMultiWallet();
   const walletAddress = walletState.polkadot.address || walletState.ethereum.address;
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({

@@ -5,8 +5,8 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useWallet } from "@/hooks/useWallet";
-import { apiRequest } from "@/lib/queryClient";
+import { useMultiWallet } from "@/hooks/useMultiWallet";
+import { queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,15 +20,16 @@ const PARACHAINS = [
 
 export default function TransferPage() {
   const { toast } = useToast();
-  const walletState = useWallet();
+  const { walletState } = useMultiWallet();
   const [toChain, setToChain] = useState("moonbeam");
   const [amount, setAmount] = useState("");
   const [destinationAddress, setDestinationAddress] = useState("");
 
   const transferMutation = useMutation({
     mutationFn: async (data: { toChain: string; amount: string; destinationAddress: string }) => {
-      return await apiRequest("/api/transfer/xcm", {
+      const response = await fetch("/api/transfer/xcm", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fromAddress: walletState.polkadot.address,
           toChain: data.toChain,
@@ -36,6 +37,8 @@ export default function TransferPage() {
           destinationAddress: data.destinationAddress,
         }),
       });
+      if (!response.ok) throw new Error("Transfer failed");
+      return response.json();
     },
     onSuccess: (data) => {
       toast({
