@@ -16,7 +16,7 @@ export function ActivityFeed() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
+    let unsubscribe: (() => Promise<void>) | undefined;
     let api: ApiPromise | undefined;
 
     async function subscribeEvents() {
@@ -39,7 +39,9 @@ export function ActivityFeed() {
           setEvents(latest);
         });
         
-        unsubscribe = unsub as unknown as () => void;
+        unsubscribe = async () => {
+          await unsub();
+        };
       } catch (err) {
         console.error("Failed to subscribe to events:", err);
         setError("Failed to connect to Polkadot network");
@@ -50,14 +52,18 @@ export function ActivityFeed() {
     subscribeEvents();
 
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-      if (api) {
-        api.disconnect().catch((err) => {
-          console.error("Error disconnecting from Polkadot API:", err);
-        });
-      }
+      (async () => {
+        try {
+          if (unsubscribe) {
+            await unsubscribe();
+          }
+          if (api) {
+            await api.disconnect();
+          }
+        } catch (err) {
+          console.error("Error cleaning up Polkadot API connection:", err);
+        }
+      })();
     };
   }, []);
 
