@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { Badge } from "@/components/ui/badge";
-import { Activity } from "lucide-react";
+import { Activity, Dot } from "lucide-react";
 
 interface ChainEvent {
   section: string;
@@ -17,11 +17,12 @@ export function ActivityFeed() {
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
+    let api: ApiPromise | undefined;
 
     async function subscribeEvents() {
       try {
         const provider = new WsProvider("wss://rpc.polkadot.io");
-        const api = await ApiPromise.create({ provider });
+        api = await ApiPromise.create({ provider });
 
         setIsConnected(true);
         setError(null);
@@ -51,6 +52,11 @@ export function ActivityFeed() {
     return () => {
       if (unsubscribe) {
         unsubscribe();
+      }
+      if (api) {
+        api.disconnect().catch((err) => {
+          console.error("Error disconnecting from Polkadot API:", err);
+        });
       }
     };
   }, []);
@@ -97,7 +103,7 @@ export function ActivityFeed() {
                 className="flex items-start gap-2 hover-elevate rounded p-2"
                 data-testid={`activity-event-${i}`}
               >
-                <span className="text-muted-foreground">🔹</span>
+                <Dot className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1">
                   <span className={getEventColor(event.section)}>
                     {event.section}.{event.method}
