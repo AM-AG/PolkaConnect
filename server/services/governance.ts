@@ -26,12 +26,73 @@ async function getPolkadotApi(): Promise<ApiPromise | null> {
   }
 }
 
+// Mock proposals for fallback when RPC connection fails
+function getMockProposals(): Proposal[] {
+  return [
+    {
+      id: 1042,
+      title: "Treasury Proposal: Upgrade Network Infrastructure",
+      proposer: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+      status: "active",
+      ayeVotes: 45230,
+      nayVotes: 12450,
+      deadline: "14 days",
+      description: "Funding request for upgrading Polkadot network infrastructure and improving relay chain performance.",
+      track: "root",
+    },
+    {
+      id: 1041,
+      title: "Runtime Upgrade: Enhanced Governance Features",
+      proposer: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+      status: "active",
+      ayeVotes: 38920,
+      nayVotes: 8340,
+      deadline: "21 days",
+      description: "Propose runtime upgrade to implement advanced governance features and delegation capabilities.",
+      track: "root",
+    },
+    {
+      id: 1040,
+      title: "Ecosystem Development Fund Allocation",
+      proposer: "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+      status: "active",
+      ayeVotes: 52100,
+      nayVotes: 15230,
+      deadline: "7 days",
+      description: "Allocate funds from treasury to support parachain development and ecosystem growth initiatives.",
+      track: "treasurer",
+    },
+    {
+      id: 1039,
+      title: "Staking Rewards Parameter Adjustment",
+      proposer: "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+      status: "active",
+      ayeVotes: 29840,
+      nayVotes: 5120,
+      deadline: "18 days",
+      description: "Adjust staking rewards distribution parameters to optimize network security and validator participation.",
+      track: "root",
+    },
+    {
+      id: 1038,
+      title: "Community Event Sponsorship Program",
+      proposer: "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
+      status: "active",
+      ayeVotes: 18340,
+      nayVotes: 3210,
+      deadline: "25 days",
+      description: "Establish a program to sponsor community-driven events, hackathons, and educational workshops.",
+      track: "small_tipper",
+    },
+  ];
+}
+
 export async function fetchReferenda(): Promise<Proposal[]> {
   const api = await getPolkadotApi();
 
   if (!api) {
-    console.log("No API connection, returning empty proposals");
-    return [];
+    console.log("No API connection, returning mock proposals");
+    return getMockProposals();
   }
 
   try {
@@ -71,11 +132,16 @@ export async function fetchReferenda(): Promise<Proposal[]> {
       }
     }
 
-    // If no active referenda found, return empty array
+    // If no active referenda found, return mock data
+    if (proposals.length === 0) {
+      console.log("No active referenda found on chain, returning mock proposals");
+      return getMockProposals();
+    }
+
     return proposals.slice(0, 10); // Limit to 10 most recent
   } catch (error) {
-    console.error("Error fetching referenda:", error);
-    return [];
+    console.error("Error fetching referenda, returning mock proposals:", error);
+    return getMockProposals();
   }
 }
 

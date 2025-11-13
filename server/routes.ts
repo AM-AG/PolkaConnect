@@ -151,6 +151,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Staking endpoints
+  // IMPORTANT: Analytics route MUST come before :address route to avoid matching "analytics" as an address
+  app.get("/api/staking/analytics", async (req, res) => {
+    try {
+      const { bondedAmount } = req.query;
+      console.log("Fetching staking analytics");
+      const analytics = await getStakingAnalytics(bondedAmount as string);
+      
+      // Cache the results
+      storage.setCachedStakingAnalytics(analytics);
+      
+      res.json({ 
+        success: true, 
+        data: analytics 
+      });
+    } catch (error) {
+      console.error("Error fetching staking analytics:", error);
+      
+      // Try to return cached data on error
+      const cached = storage.getCachedStakingAnalytics();
+      if (cached) {
+        return res.json({ 
+          success: true, 
+          data: cached,
+          cached: true
+        });
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to fetch staking analytics" 
+      });
+    }
+  });
+
   app.get("/api/staking/:address", async (req, res) => {
     const { address } = req.params;
     
@@ -194,39 +227,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching staking rewards:", error);
       res.status(500).json({ 
         error: "Failed to fetch staking rewards" 
-      });
-    }
-  });
-
-  // Staking analytics endpoint
-  app.get("/api/staking/analytics", async (req, res) => {
-    try {
-      const { bondedAmount } = req.query;
-      console.log("Fetching staking analytics");
-      const analytics = await getStakingAnalytics(bondedAmount as string);
-      
-      // Cache the results
-      storage.setCachedStakingAnalytics(analytics);
-      
-      res.json({ 
-        success: true, 
-        data: analytics 
-      });
-    } catch (error) {
-      console.error("Error fetching staking analytics:", error);
-      
-      // Try to return cached data on error
-      const cached = storage.getCachedStakingAnalytics();
-      if (cached) {
-        return res.json({ 
-          success: true, 
-          data: cached,
-          cached: true
-        });
-      }
-      
-      res.status(500).json({ 
-        error: "Failed to fetch staking analytics" 
       });
     }
   });

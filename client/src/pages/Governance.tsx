@@ -53,10 +53,12 @@ export default function Governance() {
           <CardContent>
             {summaryLoading ? (
               <Skeleton className="h-7 w-20" />
-            ) : (
+            ) : summary ? (
               <div className="text-2xl font-bold">
-                {(summary?.totalVoters ?? 0).toLocaleString()}
+                {(summary.totalVoters ?? 0).toLocaleString()}
               </div>
+            ) : (
+              <div className="text-2xl font-bold">0</div>
             )}
           </CardContent>
         </Card>
@@ -69,10 +71,12 @@ export default function Governance() {
           <CardContent>
             {summaryLoading ? (
               <Skeleton className="h-7 w-20" />
-            ) : (
+            ) : summary ? (
               <div className="text-2xl font-bold">
-                {(summary?.totalVotes ?? 0).toLocaleString()}
+                {(summary.totalVotes ?? 0).toLocaleString()}
               </div>
+            ) : (
+              <div className="text-2xl font-bold">0</div>
             )}
           </CardContent>
         </Card>
@@ -85,10 +89,12 @@ export default function Governance() {
           <CardContent>
             {summaryLoading ? (
               <Skeleton className="h-7 w-20" />
-            ) : (
+            ) : summary ? (
               <div className="text-2xl font-bold">
-                {(summary?.averageParticipation ?? 0).toFixed(1)}%
+                {(summary.averageParticipation ?? 0).toFixed(1)}%
               </div>
+            ) : (
+              <div className="text-2xl font-bold">0.0%</div>
             )}
           </CardContent>
         </Card>
