@@ -37,7 +37,13 @@ Preferred communication style: Simple, everyday language.
     - **Substrate**: Polkadot.js API `system.account` with SS58 addresses, BigInt modulo for decimal precision.
     - **EVM**: ethers.js `getBalance` with H160 addresses.
     - **Resilience**: `Promise.allSettled` for parallel fetching, cache namespace, status indicators.
-**Cross-Chain Messaging (XCM)**: Discovery of active parachains and mapping to known chain names, foundation for asset transfers.
+**Cross-Chain Messaging (XCM)**: 
+- Discovery of active parachains and mapping to known chain names
+- XCM-based DOT transfers with destination chain selection (Moonbeam, Astar, Acala, Parallel)
+- **Transfer Validation**: Real-time balance verification and Substrate address validation using Polkadot.js utilities
+- **Balance Display**: Shows available DOT balance with MAX button for quick-fill
+- **Address Validation**: Real-time feedback for destination addresses (green checkmark for valid, red X for invalid)
+- **Smart Button States**: Dynamic transfer button with context-aware text ("Insufficient Balance", "Invalid Destination Address", etc.)
 
 **Community Features**:
 - **Leaderboard System**: Rankings of top community members with XP scoring (votes +10XP, staking +5XP, XCM transfers +20XP)
