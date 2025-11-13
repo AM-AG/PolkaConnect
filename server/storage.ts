@@ -11,7 +11,10 @@ import {
   type UserXp,
   type InsertUserXp,
   type TransactionHistory,
-  type InsertTransactionHistory
+  type InsertTransactionHistory,
+  type XcmActivity,
+  type StakingAnalytics,
+  type GovernanceParticipation
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -28,6 +31,15 @@ export interface IStorage {
   
   getCachedNetworkNodes(): NetworkNode[] | null;
   setCachedNetworkNodes(nodes: NetworkNode[]): void;
+  
+  getCachedXcmActivity(): XcmActivity[] | null;
+  setCachedXcmActivity(activity: XcmActivity[]): void;
+  
+  getCachedStakingAnalytics(): StakingAnalytics | null;
+  setCachedStakingAnalytics(analytics: StakingAnalytics): void;
+  
+  getCachedGovernanceParticipation(address: string): GovernanceParticipation | null;
+  setCachedGovernanceParticipation(participation: GovernanceParticipation): void;
   
   // Governance votes
   createVote(vote: InsertGovernanceVote): Promise<GovernanceVote>;
@@ -62,6 +74,9 @@ export class MemStorage implements IStorage {
   private cachedBalances: ChainBalance[] | null = null;
   private cachedProposals: Proposal[] | null = null;
   private cachedNetworkNodes: NetworkNode[] | null = null;
+  private cachedXcmActivity: XcmActivity[] | null = null;
+  private cachedStakingAnalytics: StakingAnalytics | null = null;
+  private cachedGovernanceParticipation: Map<string, GovernanceParticipation> = new Map();
   private governanceVotes: Map<string, GovernanceVote>;
   private comments: Map<string, Comment>;
   private userXpMap: Map<string, UserXp>;
@@ -114,6 +129,30 @@ export class MemStorage implements IStorage {
 
   setCachedNetworkNodes(nodes: NetworkNode[]): void {
     this.cachedNetworkNodes = nodes;
+  }
+
+  getCachedXcmActivity(): XcmActivity[] | null {
+    return this.cachedXcmActivity;
+  }
+
+  setCachedXcmActivity(activity: XcmActivity[]): void {
+    this.cachedXcmActivity = activity;
+  }
+
+  getCachedStakingAnalytics(): StakingAnalytics | null {
+    return this.cachedStakingAnalytics;
+  }
+
+  setCachedStakingAnalytics(analytics: StakingAnalytics): void {
+    this.cachedStakingAnalytics = analytics;
+  }
+
+  getCachedGovernanceParticipation(address: string): GovernanceParticipation | null {
+    return this.cachedGovernanceParticipation.get(address) || null;
+  }
+
+  setCachedGovernanceParticipation(participation: GovernanceParticipation): void {
+    this.cachedGovernanceParticipation.set(participation.walletAddress, participation);
   }
 
   // Governance votes
@@ -294,7 +333,8 @@ export class MemStorage implements IStorage {
 
   async getUniqueWalletCount(): Promise<number> {
     const uniqueWallets = new Set<string>();
-    for (const tx of this.transactionHistoryMap.values()) {
+    const transactions = Array.from(this.transactionHistoryMap.values());
+    for (const tx of transactions) {
       uniqueWallets.add(tx.walletAddress);
     }
     return uniqueWallets.size;

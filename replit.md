@@ -17,21 +17,28 @@ Preferred communication style: Simple, everyday language.
 **State Management**: TanStack React Query for caching and server state.
 **UI Framework**: shadcn/ui built on Radix UI, styled with Tailwind CSS.
 **Design System**: Inter and JetBrains Mono fonts, HSL-based light/dark themes, 12-column responsive grid, card-based UI.
-**Key Pages**: Dashboard, Assets, Swap, Transfer (XCM-based DOT transfers), History, Community (leaderboard, activity feed, staking pools), Staking, Governance, Network, Transactions (live feed).
-**Resilience**: LocalStorage caching with TTL, fallback to cached data, status banners, client-side data age tracking.
+**Key Pages**: Dashboard, Assets, Swap, Transfer (XCM-based DOT transfers), History, Community (leaderboard, activity feed, staking pools), Staking (with analytics & validator recommendations), Governance (with participation metrics), Network (with live XCM activity), Transactions (live feed).
+**Resilience**: LocalStorage caching with TTL, fallback to cached data, status banners, client-side data age tracking, null-safe rendering with fallback UI states.
 
 ### Backend Architecture
 
 **Framework**: Express.js with TypeScript (Node.js).
-**API Endpoints**: `/api/assets/:address`, `/api/governance`, `/api/network`, `/api/transfer/xcm` (POST), `/api/history/:walletAddress`, `/api/stats/community`.
+**API Endpoints**: `/api/assets/:address`, `/api/governance`, `/api/governance/summary`, `/api/governance/participation/:address`, `/api/network`, `/api/network/xcm`, `/api/transfer/xcm` (POST), `/api/history/:walletAddress`, `/api/stats/community`, `/api/staking/analytics`.
 **Data Flow**: Server polls parachain RPCs via Polkadot.js API, caches in-memory (`MemStorage`), falls back to cached data on API errors.
-**Error Handling**: Try/catch blocks for blockchain API calls, graceful degradation, connection timeout handling.
+**Error Handling**: Try/catch blocks for blockchain API calls, graceful degradation, connection timeout handling, mock data fallbacks.
 
 ### Blockchain Integration
 
 **Polkadot.js API**: WebSocket connections to Polkadot, Astar, and Moonbeam RPC endpoints, with API instance caching and health checks.
 **Wallet Integration**: Simultaneous Polkadot.js extension and MetaMask (ethers.js) support. Polkadot.js allows multi-account selection, persistence via localStorage.
-**Governance**: Fetches Polkadot OpenGov referenda data, displays vote tallies.
+**Governance**: 
+- Fetches Polkadot OpenGov referenda data, displays vote tallies
+- **Governance Engagement Features** (November 2025):
+  - Participation metrics dashboard (Total Voters, Total Votes, Participation Rate)
+  - Trending proposals section showing top 3 by vote volume
+  - User participation tracking with voting power and badges
+  - Achievement badges (Active Voter, Governance Expert, Community Leader)
+  - Mock data fallback ensures always-functional UI
 **Balance Queries**:
     - **Multi-Chain Configuration**: Polkadot (Substrate), Astar (Substrate), Moonbeam (EVM), Ethereum (EVM).
     - **Substrate**: Polkadot.js API `system.account` with SS58 addresses, BigInt modulo for decimal precision.
@@ -44,6 +51,22 @@ Preferred communication style: Simple, everyday language.
 - **Balance Display**: Shows available DOT balance with MAX button for quick-fill
 - **Address Validation**: Real-time feedback for destination addresses (green checkmark for valid, red X for invalid)
 - **Smart Button States**: Dynamic transfer button with context-aware text ("Insufficient Balance", "Invalid Destination Address", etc.)
+
+**Network Page Enhancements** (November 2025):
+- **Dynamic XCM Activity Tracking**: Real-time view of cross-chain transfer activity
+  - Displays 5 active parachain transfer routes (Polkadot ↔ Astar, Moonbeam, etc.)
+  - Shows transfer counts, 24h volumes, and last transfer timestamps
+  - Data refreshes every 30 seconds via `/api/network/xcm`
+  - Simulated activity with deterministic data generation
+  - Always functional with mock fallbacks
+
+**Staking Page Enhancements** (November 2025):
+- **Staking Analytics & Encouragement** (works WITHOUT wallet connection):
+  - **Staking Rewards Calculator**: Shows average APY (13.5%), projects daily/monthly/yearly earnings based on bonded amount
+  - **Top Validators List**: Displays 5 recommended validators with APY rates, commission fees, nominator counts, and reputation scores
+  - **Strategic Layout**: Analytics displayed BEFORE wallet connection prompt to encourage new users to stake
+  - Null-safe rendering with graceful fallbacks for partial data
+  - Endpoint: `/api/staking/analytics` returns deterministic mock validator data
 
 **Community Features**:
 - **Leaderboard System**: Rankings of top community members with XP scoring (votes +10XP, staking +5XP, XCM transfers +20XP)

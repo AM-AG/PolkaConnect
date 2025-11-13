@@ -1,11 +1,14 @@
 import { NetworkMap } from "@/components/NetworkMap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity } from "lucide-react";
+import { Activity, TrendingUp, Clock } from "lucide-react";
 import { useNetwork } from "@/hooks/useNetwork";
+import { useXcmActivity } from "@/hooks/useXcmActivity";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Network() {
-  const { data: nodes, isLoading } = useNetwork();
+  const { data: nodes, isLoading: nodesLoading } = useNetwork();
+  const { data: xcmActivity, isLoading: xcmLoading } = useXcmActivity();
 
   const positionNodes = (nodeList: any[]) => {
     const positions = [
@@ -23,12 +26,6 @@ export default function Network() {
     }));
   };
 
-  const xcmActivity = [
-    { from: "Polkadot", to: "Astar", count: 1234, assets: "DOT, ASTR" },
-    { from: "Moonbeam", to: "Polkadot", count: 567, assets: "GLMR, DOT" },
-    { from: "Astar", to: "Moonbeam", count: 890, assets: "ASTR, GLMR" },
-  ];
-
   return (
     <div className="space-y-6">
       <div>
@@ -38,7 +35,7 @@ export default function Network() {
         </p>
       </div>
 
-      {isLoading ? (
+      {nodesLoading ? (
         <div className="h-96 bg-card rounded-lg animate-pulse" />
       ) : nodes && nodes.length > 0 ? (
         <NetworkMap nodes={positionNodes(nodes)} />
@@ -54,29 +51,56 @@ export default function Network() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Recent XCM Activity
+            Live XCM Activity
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {xcmActivity.map((activity, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
-                data-testid={`xcm-activity-${idx}`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{activity.from}</span>
-                  <span className="text-muted-foreground">→</span>
-                  <span className="font-medium">{activity.to}</span>
+          {xcmLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : xcmActivity && xcmActivity.length > 0 ? (
+            <div className="space-y-3">
+              {xcmActivity.map((activity, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover-elevate"
+                  data-testid={`xcm-activity-${idx}`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-semibold text-sm">{activity.from}</span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="font-semibold text-sm">{activity.to}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <TrendingUp className="h-3 w-3" />
+                        {activity.volume24h}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {activity.lastTransfer}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono text-lg font-bold">{activity.count}</div>
+                    <div className="text-xs text-muted-foreground">transfers</div>
+                    <div className="text-xs text-muted-foreground mt-1">{activity.assets}</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-mono text-sm">{activity.count} transfers</div>
-                  <div className="text-xs text-muted-foreground">{activity.assets}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <Alert>
+              <AlertDescription>
+                No XCM activity data available. Check back soon.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
     </div>

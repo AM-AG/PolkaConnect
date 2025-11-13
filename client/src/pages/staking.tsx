@@ -4,7 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, Unlock, TrendingUp, Award, Wallet } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Lock, Unlock, TrendingUp, Award, Wallet, Calculator, Info, Star } from "lucide-react";
+import { useStakingAnalytics } from "@/hooks/useStakingAnalytics";
 import type { StakingInfo } from "@shared/schema";
 
 export default function Staking() {
@@ -16,22 +18,8 @@ export default function Staking() {
     enabled: !!address,
   });
 
-  if (!address) {
-    return (
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" data-testid="text-page-title">Staking</h1>
-          <p className="text-muted-foreground">Manage your DOT staking and nominations</p>
-        </div>
-        <Alert data-testid="alert-connect-wallet">
-          <Wallet className="h-4 w-4" />
-          <AlertDescription>
-            Please connect your Polkadot.js wallet to view staking information.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+  const bondedAmount = stakingInfo?.bondedBalance || "100";
+  const { data: analytics, isLoading: analyticsLoading } = useStakingAnalytics(bondedAmount);
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
@@ -40,7 +28,129 @@ export default function Staking() {
         <p className="text-muted-foreground">Manage your DOT staking and nominations</p>
       </div>
 
-      {error && (
+      {/* Staking Analytics & Encouragement - Always visible */}
+      <div className="grid gap-6 lg:grid-cols-2 mb-6">
+        <Card data-testid="card-staking-calculator">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5" />
+              Staking Rewards Calculator
+            </CardTitle>
+            <CardDescription>
+              Estimate your potential earnings from staking DOT
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {analyticsLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ) : analytics && analytics.projections && analytics.averageApy && analytics.minStake ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                  <div className="text-sm text-muted-foreground mb-1">Average APY</div>
+                  <div className="text-3xl font-bold text-primary">{analytics.averageApy}%</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Daily Earnings</span>
+                    <span className="font-mono font-semibold">{analytics.projections.daily} DOT</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Monthly Earnings</span>
+                    <span className="font-mono font-semibold">{analytics.projections.monthly} DOT</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Yearly Earnings</span>
+                    <span className="font-mono font-bold text-lg text-primary">{analytics.projections.yearly} DOT</span>
+                  </div>
+                </div>
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    Minimum stake: {analytics.minStake} • Unbonding: {analytics.unbondingPeriod} days
+                  </AlertDescription>
+                </Alert>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground text-center py-4">
+                Loading analytics...
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card data-testid="card-top-validators">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5" />
+              Top Validators
+            </CardTitle>
+            <CardDescription>
+              Recommended validators with high APY and reliability
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {analyticsLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : analytics && analytics.topValidators && analytics.topValidators.length > 0 ? (
+              <div className="space-y-2" data-testid="list-top-validators">
+                {analytics.topValidators.slice(0, 5).map((validator, index) => (
+                  <div
+                    key={index}
+                    className="p-3 rounded-md bg-muted/30 hover-elevate"
+                    data-testid={`validator-${index}`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="font-medium text-sm mb-1">{validator.name || `Validator ${index + 1}`}</div>
+                        <div className="text-xs text-muted-foreground font-mono truncate">
+                          {validator.address.slice(0, 10)}...{validator.address.slice(-8)}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {validator.apy}% APY
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>{validator.commission}% fee</span>
+                      <span>•</span>
+                      <span>{validator.nominators} nominators</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-current text-yellow-500" />
+                        {validator.reputation}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground text-center py-4">
+                Loading validator data...
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Wallet Connect Alert */}
+      {!address && (
+        <Alert data-testid="alert-connect-wallet" className="mb-6">
+          <Wallet className="h-4 w-4" />
+          <AlertDescription>
+            Connect your Polkadot.js wallet to view your personal staking information and manage nominations.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Personal Staking Info - Only when wallet connected */}
+      {address && error && (
         <Alert variant="destructive" data-testid="alert-error" className="mb-6">
           <AlertDescription>
             Failed to load staking information. Please try again later.
@@ -48,7 +158,7 @@ export default function Staking() {
         </Alert>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+      {address && <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
         <Card data-testid="card-bonded-balance">
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Bonded Balance</CardTitle>
@@ -111,9 +221,9 @@ export default function Staking() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </div>}
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {address && <div className="grid gap-6 md:grid-cols-2">
         <Card data-testid="card-nominations-list">
           <CardHeader>
             <CardTitle>Your Nominations</CardTitle>
@@ -184,9 +294,9 @@ export default function Staking() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </div>}
 
-      <div className="mt-6">
+      {address && <div className="mt-6">
         <Card data-testid="card-staking-actions">
           <CardHeader>
             <CardTitle>Staking Actions</CardTitle>
@@ -214,7 +324,7 @@ export default function Staking() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </div>}
     </div>
   );
 }

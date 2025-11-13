@@ -1,5 +1,5 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
-import type { StakingInfo } from "@shared/schema";
+import type { StakingInfo, StakingAnalytics, ValidatorInfo } from "@shared/schema";
 
 // Singleton API instance per RPC endpoint
 const API_INSTANCES = new Map<string, ApiPromise>();
@@ -151,4 +151,73 @@ export async function getStakingRewards(
     console.error("Staking rewards fetch error:", error);
     return [];
   }
+}
+
+export async function getStakingAnalytics(
+  bondedAmount: string = "100"
+): Promise<StakingAnalytics> {
+  // This function generates mock/deterministic data
+  // In production, this would query validator metrics from chain or indexer
+  const topValidators: ValidatorInfo[] = [
+    {
+      address: "1zugcavYA9yCuYwiEYeMHNJm9gXznYjNfXQjZsZukF1Mpow",
+      name: "🥇 Polkadot Validator Pool",
+      apy: 14.2,
+      commission: 3,
+      totalStake: "1,524,000 DOT",
+      nominators: 512,
+      reputation: 98,
+    },
+    {
+      address: "13UVJyLnbVp9RBZYFwFGyDvVd1y27Tt8tkntv6Q7JVPhFsTB",
+      name: "⭐ Community Staking",
+      apy: 13.8,
+      commission: 5,
+      totalStake: "1,203,000 DOT",
+      nominators: 438,
+      reputation: 95,
+    },
+    {
+      address: "14Gn7SEmCPPJVUbNgYjT45sD7K4X7bVvfLfQwPsKFk8EVoKj",
+      name: "🔒 Secure Stakes",
+      apy: 13.5,
+      commission: 4,
+      totalStake: "987,000 DOT",
+      nominators: 356,
+      reputation: 92,
+    },
+    {
+      address: "15kUt2i86LHRWCkE3D9Bg1HZAoc2smhn1fwPzDERTb1BXAkX",
+      name: "🌐 Global Validators",
+      apy: 13.2,
+      commission: 6,
+      totalStake: "845,000 DOT",
+      nominators: 289,
+      reputation: 90,
+    },
+    {
+      address: "16aP3oTaD7oQ6qmxU6fDAi7NWUB7knqH6UsWbwjnAhvRSxzp",
+      name: "💎 Diamond Node",
+      apy: 12.9,
+      commission: 5,
+      totalStake: "723,000 DOT",
+      nominators: 245,
+      reputation: 88,
+    },
+  ];
+
+  const bonded = parseFloat(bondedAmount.replace(/,/g, "")) || 100;
+  const averageApy = 13.5;
+
+  return {
+    averageApy,
+    minStake: "1 DOT",
+    unbondingPeriod: 28,
+    topValidators,
+    projections: {
+      daily: (bonded * (averageApy / 100) / 365).toFixed(4),
+      monthly: (bonded * (averageApy / 100) / 12).toFixed(2),
+      yearly: (bonded * (averageApy / 100)).toFixed(2),
+    },
+  };
 }

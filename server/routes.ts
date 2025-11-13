@@ -2,8 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { fetchAllBalances, getNetworkStatus } from "./services/polkadot";
-import { fetchReferenda } from "./services/governance";
-import { getStakingInfo, getStakingRewards } from "./services/staking";
+import { fetchReferenda, getGovernanceSummary, getGovernanceParticipation } from "./services/governance";
+import { getStakingInfo, getStakingRewards, getStakingAnalytics } from "./services/staking";
+import { getXcmActivity } from "./services/network";
 import { insertGovernanceVoteSchema, insertCommentSchema, insertTransactionHistorySchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -115,6 +116,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // XCM Activity endpoint
+  app.get("/api/network/xcm", async (req, res) => {
+    try {
+      console.log("Fetching XCM activity");
+      const activity = await getXcmActivity();
+      
+      // Cache the results
+      storage.setCachedXcmActivity(activity);
+      
+      res.json({ 
+        success: true, 
+        data: activity,
+        cached: false 
+      });
+    } catch (error) {
+      console.error("Error fetching XCM activity:", error);
+      
+      // Try to return cached data on error
+      const cached = storage.getCachedXcmActivity();
+      if (cached) {
+        return res.json({ 
+          success: true, 
+          data: cached,
+          cached: true,
+          error: "Using cached data due to connection error"
+        });
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to fetch XCM activity and no cache available" 
+      });
+    }
+  });
+
   // Staking endpoints
   app.get("/api/staking/:address", async (req, res) => {
     const { address } = req.params;
@@ -159,6 +194,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching staking rewards:", error);
       res.status(500).json({ 
         error: "Failed to fetch staking rewards" 
+      });
+    }
+  });
+
+  // Staking analytics endpoint
+  app.get("/api/staking/analytics", async (req, res) => {
+    try {
+      const { bondedAmount } = req.query;
+      console.log("Fetching staking analytics");
+      const analytics = await getStakingAnalytics(bondedAmount as string);
+      
+      // Cache the results
+      storage.setCachedStakingAnalytics(analytics);
+      
+      res.json({ 
+        success: true, 
+        data: analytics 
+      });
+    } catch (error) {
+      console.error("Error fetching staking analytics:", error);
+      
+      // Try to return cached data on error
+      const cached = storage.getCachedStakingAnalytics();
+      if (cached) {
+        return res.json({ 
+          success: true, 
+          data: cached,
+          cached: true
+        });
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to fetch staking analytics" 
       });
     }
   });
@@ -216,6 +284,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching user vote:", error);
       res.status(500).json({ 
         error: "Failed to fetch user vote" 
+      });
+    }
+  });
+
+  // Governance summary and participation
+  app.get("/api/governance/summary", async (req, res) => {
+    try {
+      const { walletAddress } = req.query;
+      console.log("Fetching governance summary");
+      const summary = await getGovernanceSummary(walletAddress as string);
+      
+      res.json({ 
+        success: true, 
+        data: summary 
+      });
+    } catch (error) {
+      console.error("Error fetching governance summary:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch governance summary" 
+      });
+    }
+  });
+
+  app.get("/api/governance/participation/:walletAddress", async (req, res) => {
+    try {
+      const { walletAddress } = req.params;
+      console.log(`Fetching participation for ${walletAddress}`);
+      const proposals = await fetchReferenda();
+      const participation = await getGovernanceParticipation(walletAddress, proposals);
+      
+      // Cache the result
+      storage.setCachedGovernanceParticipation(participation);
+      
+      res.json({ 
+        success: true, 
+        data: participation 
+      });
+    } catch (error) {
+      console.error("Error fetching participation:", error);
+      
+      // Try cached data
+      const cached = storage.getCachedGovernanceParticipation(req.params.walletAddress);
+      if (cached) {
+        return res.json({ 
+          success: true, 
+          data: cached,
+          cached: true
+        });
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to fetch participation data" 
       });
     }
   });
@@ -374,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get real data from storage
       const proposals = storage.getCachedProposals() || [];
-      const xcmChannels = storage.getCachedXcmData() || [];
+      const xcmChannels = storage.getCachedXcmActivity() || [];
       const totalTransactions = await storage.getTotalTransactionCount();
       const totalWallets = await storage.getUniqueWalletCount();
       

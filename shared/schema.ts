@@ -161,3 +161,55 @@ export interface CommunityStats {
   activeValidators: number;
   lastUpdated: string;
 }
+
+// XCM Activity tracking interface
+export interface XcmActivity {
+  from: string;
+  to: string;
+  count: number;
+  assets: string;
+  volume24h?: string;
+  lastTransfer?: string;
+}
+
+// Staking analytics and projections
+export interface StakingAnalytics {
+  averageApy: number;
+  minStake: string;
+  unbondingPeriod: number; // days
+  topValidators: ValidatorInfo[];
+  projections: {
+    daily: string;
+    monthly: string;
+    yearly: string;
+  };
+}
+
+export interface ValidatorInfo {
+  address: string;
+  name?: string;
+  apy: number;
+  commission: number;
+  totalStake: string;
+  nominators: number;
+  reputation: number; // 0-100
+}
+
+// Governance participation metrics
+export interface GovernanceParticipation {
+  walletAddress: string;
+  votingPower: string;
+  votesCount: number;
+  lastVote?: string;
+  streak: number; // consecutive votes
+  rank?: number;
+  badges: string[];
+}
+
+export interface GovernanceSummary {
+  totalVoters: number;
+  totalVotes: number;
+  averageParticipation: number; // percentage
+  trendingProposals: Proposal[];
+  userParticipation?: GovernanceParticipation;
+}
