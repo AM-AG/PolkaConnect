@@ -27,7 +27,7 @@ export function ActivityFeed() {
         setIsConnected(true);
         setError(null);
 
-        const unsub = await api.query.system.events((records: any) => {
+        const unsub: any = await api.query.system.events((records: any) => {
           const latest = records
             .slice(-10)
             .reverse()
@@ -39,9 +39,7 @@ export function ActivityFeed() {
           setEvents(latest);
         });
         
-        unsubscribe = async () => {
-          await unsub();
-        };
+        unsubscribe = unsub;
       } catch (err) {
         console.error("Failed to subscribe to events:", err);
         setError("Failed to connect to Polkadot network");
