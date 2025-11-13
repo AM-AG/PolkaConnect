@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
@@ -6,10 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
+import { useMultiChainBalances } from "@/hooks/useMultiChainBalances";
 import { queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
-import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { decodeAddress, encodeAddress } from "@polkadot/keyring";
+import { hexToU8a, isHex } from "@polkadot/util";
 
 const PARACHAINS = [
   { id: "moonbeam", name: "Moonbeam", paraId: 2004 },
@@ -18,12 +21,30 @@ const PARACHAINS = [
   { id: "parallel", name: "Parallel", paraId: 2012 },
 ];
 
+// Validate Substrate address format
+function isValidSubstrateAddress(address: string): boolean {
+  try {
+    encodeAddress(
+      isHex(address) ? hexToU8a(address) : decodeAddress(address)
+    );
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 export default function TransferPage() {
   const { toast } = useToast();
   const { walletState } = useMultiWallet();
   const [toChain, setToChain] = useState("moonbeam");
   const [amount, setAmount] = useState("");
   const [destinationAddress, setDestinationAddress] = useState("");
+
+  // Fetch user balances
+  const { data: balances, isLoading: balancesLoading } = useMultiChainBalances(walletState);
+
+  // Get DOT balance from Polkadot relay chain
+  const dotBalance = balances?.find(b => b.chainId === "polkadot")?.balanceNumeric || 0;
 
   const transferMutation = useMutation({
     mutationFn: async (data: { toChain: string; amount: string; destinationAddress: string }) => {
@@ -61,6 +82,23 @@ export default function TransferPage() {
     },
   });
 
+  // Validation states
+  const requestedAmount = parseFloat(amount) || 0;
+  const isAddressValid = destinationAddress.trim().length > 0 ? isValidSubstrateAddress(destinationAddress) : null;
+  const hasSufficientBalance = requestedAmount > 0 && dotBalance >= requestedAmount;
+  const isAmountValid = requestedAmount > 0;
+
+  // Check if transfer can be executed
+  const canTransfer = useMemo(() => {
+    return (
+      walletState.polkadot.connected &&
+      isAmountValid &&
+      hasSufficientBalance &&
+      isAddressValid === true &&
+      !transferMutation.isPending
+    );
+  }, [walletState.polkadot.connected, isAmountValid, hasSufficientBalance, isAddressValid, transferMutation.isPending]);
+
   const handleTransfer = () => {
     if (!walletState.polkadot.connected) {
       toast({
@@ -71,10 +109,19 @@ export default function TransferPage() {
       return;
     }
 
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!isAmountValid) {
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!hasSufficientBalance) {
+      toast({
+        title: "Insufficient Balance",
+        description: `You only have ${dotBalance.toFixed(6)} DOT. Please reduce the amount.`,
         variant: "destructive",
       });
       return;
@@ -84,6 +131,15 @@ export default function TransferPage() {
       toast({
         title: "Missing Destination",
         description: "Please enter a destination address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isAddressValid !== true) {
+      toast({
+        title: "Invalid Address",
+        description: "Please enter a valid Substrate address",
         variant: "destructive",
       });
       return;
@@ -154,7 +210,33 @@ export default function TransferPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (DOT)</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="amount">Amount (DOT)</Label>
+              {walletState.polkadot.connected && (
+                <div className="flex items-center gap-2">
+                  {balancesLoading ? (
+                    <span className="text-sm text-muted-foreground">Loading balance...</span>
+                  ) : (
+                    <>
+                      <span className="text-sm text-muted-foreground" data-testid="text-dot-balance">
+                        Balance: {dotBalance.toFixed(6)} DOT
+                      </span>
+                      {dotBalance > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={() => setAmount(dotBalance.toString())}
+                          data-testid="button-max"
+                        >
+                          MAX
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
             <Input
               id="amount"
               data-testid="input-amount"
@@ -165,6 +247,12 @@ export default function TransferPage() {
               step="0.01"
               min="0"
             />
+            {requestedAmount > 0 && !hasSufficientBalance && walletState.polkadot.connected && (
+              <div className="flex items-center gap-2 text-sm text-destructive" data-testid="error-insufficient-balance">
+                <XCircle className="h-4 w-4" />
+                <span>Insufficient balance. You only have {dotBalance.toFixed(6)} DOT.</span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -177,6 +265,21 @@ export default function TransferPage() {
               onChange={(e) => setDestinationAddress(e.target.value)}
               className="font-mono text-sm"
             />
+            {destinationAddress.trim().length > 0 && (
+              <div className="flex items-center gap-2 text-sm" data-testid="address-validation-status">
+                {isAddressValid ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <span className="text-green-600 dark:text-green-400">Valid Substrate address</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4 text-destructive" />
+                    <span className="text-destructive">Invalid address format</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <Alert>
@@ -189,7 +292,7 @@ export default function TransferPage() {
           <Button
             className="w-full"
             onClick={handleTransfer}
-            disabled={!walletState.polkadot.connected || transferMutation.isPending}
+            disabled={!canTransfer}
             data-testid="button-transfer"
           >
             {transferMutation.isPending ? (
@@ -197,8 +300,16 @@ export default function TransferPage() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Sending Transfer...
               </>
+            ) : !walletState.polkadot.connected ? (
+              "Connect Polkadot Wallet"
+            ) : !isAmountValid ? (
+              "Enter Amount"
+            ) : !hasSufficientBalance ? (
+              "Insufficient Balance"
+            ) : isAddressValid !== true ? (
+              "Invalid Destination Address"
             ) : (
-              `Send ${amount || "0"} DOT to ${selectedChain?.name}`
+              `Send ${amount} DOT to ${selectedChain?.name}`
             )}
           </Button>
         </CardContent>
