@@ -67,6 +67,8 @@ Preferred communication style: Simple, everyday language.
   - **Strategic Layout**: Analytics displayed BEFORE wallet connection prompt to encourage new users to stake
   - Null-safe rendering with graceful fallbacks for partial data
   - Endpoint: `/api/staking/analytics` returns deterministic mock validator data
+  - **Critical Fix**: Route ordering corrected - `/api/staking/analytics` now registered BEFORE `/api/staking/:address` to prevent "analytics" being matched as an address parameter
+  - **Test Reliability**: Added data-testid attributes (text-average-apy, text-daily-earnings, etc.) for stable automated testing
 
 **Community Features**:
 - **Leaderboard System**: Rankings of top community members with XP scoring (votes +10XP, staking +5XP, XCM transfers +20XP)
@@ -118,3 +120,17 @@ Preferred communication style: Simple, everyday language.
 **TypeScript**: Strict mode enabled.
 **Vite Plugins**: `@vitejs/plugin-react`, `@replit/vite-plugin-runtime-error-modal`, `@replit/vite-plugin-cartographer`, `@replit/vite-plugin-dev-banner`.
 **Build Tools**: `esbuild`, Vite, `drizzle-kit`.
+
+## Developer SDK
+
+**Cross-Chain SDK for External Developers** (November 2025):
+- **JavaScript/TypeScript SDK** (`sdk/js/`): NPM-ready package with TypeScript support
+  - Modules: Wallet connection, swap operations, XCM transfers, governance voting
+  - Type definitions included for full IDE support
+  - Example usage and API documentation in README
+- **Python SDK** (`sdk/python/`): PyPI-ready package with type hints
+  - Modules: Wallet operations, swap functionality, transfer operations, governance
+  - Compatible with Python 3.7+
+  - Installation via pip, comprehensive documentation
+- **Purpose**: Enable third-party developers to integrate PolkaConnect functionality into their own applications
+- **Status**: Scaffolding complete, ready for implementation and publication

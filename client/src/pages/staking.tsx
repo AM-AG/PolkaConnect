@@ -47,34 +47,34 @@ export default function Staking() {
                 <Skeleton className="h-12 w-full" />
               </div>
             ) : analytics && analytics.projections && analytics.averageApy && analytics.minStake ? (
-              <div className="space-y-4">
+              <div className="space-y-4" data-testid="container-analytics-data">
                 <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
                   <div className="text-sm text-muted-foreground mb-1">Average APY</div>
-                  <div className="text-3xl font-bold text-primary">{analytics.averageApy}%</div>
+                  <div className="text-3xl font-bold text-primary" data-testid="text-average-apy">{analytics.averageApy}%</div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Daily Earnings</span>
-                    <span className="font-mono font-semibold">{analytics.projections.daily} DOT</span>
+                    <span className="font-mono font-semibold" data-testid="text-daily-earnings">{analytics.projections.daily} DOT</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Monthly Earnings</span>
-                    <span className="font-mono font-semibold">{analytics.projections.monthly} DOT</span>
+                    <span className="font-mono font-semibold" data-testid="text-monthly-earnings">{analytics.projections.monthly} DOT</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Yearly Earnings</span>
-                    <span className="font-mono font-bold text-lg text-primary">{analytics.projections.yearly} DOT</span>
+                    <span className="font-mono font-bold text-lg text-primary" data-testid="text-yearly-earnings">{analytics.projections.yearly} DOT</span>
                   </div>
                 </div>
                 <Alert>
                   <Info className="h-4 w-4" />
-                  <AlertDescription>
+                  <AlertDescription data-testid="text-staking-info">
                     Minimum stake: {analytics.minStake} • Unbonding: {analytics.unbondingPeriod} days
                   </AlertDescription>
                 </Alert>
               </div>
             ) : (
-              <div className="text-sm text-muted-foreground text-center py-4">
+              <div className="text-sm text-muted-foreground text-center py-4" data-testid="text-analytics-loading">
                 Loading analytics...
               </div>
             )}
