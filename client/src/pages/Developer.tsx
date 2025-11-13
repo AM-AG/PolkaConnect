@@ -90,34 +90,99 @@ const apiMethods = [
   {
     category: "Wallet",
     methods: [
-      { name: "connect()", description: "Connect to Polkadot.js or MetaMask wallet", returns: "Promise<void>" },
-      { name: "disconnect()", description: "Disconnect active wallet", returns: "Promise<void>" },
-      { name: "getBalance(address)", description: "Get wallet balance for specific address", returns: "Promise<Balance>" },
-      { name: "getAccounts()", description: "Get all available accounts", returns: "Promise<Account[]>" },
+      { 
+        name: "connect(walletType)", 
+        description: "Connect to Polkadot.js or MetaMask wallet", 
+        params: "walletType: 'polkadot-js' | 'metamask'",
+        returns: "Promise<void>" 
+      },
+      { 
+        name: "disconnect()", 
+        description: "Disconnect active wallet", 
+        params: "none",
+        returns: "Promise<void>" 
+      },
+      { 
+        name: "getBalance(address)", 
+        description: "Get wallet balance for specific address", 
+        params: "address: string",
+        returns: "Promise<{ free: string, reserved: string, total: string }>" 
+      },
+      { 
+        name: "getAccounts()", 
+        description: "Get all available accounts", 
+        params: "none",
+        returns: "Promise<Array<{ address: string, name: string, source: string }>>" 
+      },
     ]
   },
   {
     category: "Transfer",
     methods: [
-      { name: "xcm(params)", description: "Execute cross-chain transfer via XCM", returns: "Promise<TransferResult>" },
-      { name: "estimateFee(params)", description: "Estimate transfer fees", returns: "Promise<Fee>" },
-      { name: "getHistory(address)", description: "Get transfer history", returns: "Promise<Transfer[]>" },
+      { 
+        name: "xcm(params)", 
+        description: "Execute cross-chain transfer via XCM", 
+        params: "{ destination: string, amount: string, recipient: string }",
+        returns: "Promise<{ hash: string, block: number, success: boolean }>" 
+      },
+      { 
+        name: "estimateFee(params)", 
+        description: "Estimate transfer fees", 
+        params: "{ destination: string, amount: string }",
+        returns: "Promise<{ fee: string, currency: string }>" 
+      },
+      { 
+        name: "getHistory(address)", 
+        description: "Get transfer history", 
+        params: "address: string, limit?: number",
+        returns: "Promise<Array<{ hash: string, from: string, to: string, amount: string, timestamp: number }>>" 
+      },
     ]
   },
   {
     category: "Governance",
     methods: [
-      { name: "vote(params)", description: "Vote on governance proposal", returns: "Promise<VoteResult>" },
-      { name: "getProposals()", description: "Fetch all active proposals", returns: "Promise<Proposal[]>" },
-      { name: "getVotingPower(address)", description: "Get voting power for address", returns: "Promise<VotingPower>" },
+      { 
+        name: "vote(params)", 
+        description: "Vote on governance proposal", 
+        params: "{ proposalId: number, vote: 'aye' | 'nay', conviction?: 'None' | 'Locked1x' | 'Locked2x' | 'Locked3x' | 'Locked4x' | 'Locked5x' | 'Locked6x', amount?: string }",
+        returns: "Promise<{ hash: string, success: boolean, votingPower: string }>" 
+      },
+      { 
+        name: "getProposals(status?)", 
+        description: "Fetch all active proposals", 
+        params: "status?: 'active' | 'passed' | 'failed'",
+        returns: "Promise<Array<{ id: number, title: string, description: string, ayes: string, nays: string, status: string }>>" 
+      },
+      { 
+        name: "getVotingPower(address)", 
+        description: "Get voting power for address", 
+        params: "address: string",
+        returns: "Promise<{ power: string, conviction: string, locked: string }>" 
+      },
     ]
   },
   {
     category: "Swap",
     methods: [
-      { name: "execute(params)", description: "Execute token swap", returns: "Promise<SwapResult>" },
-      { name: "getQuote(params)", description: "Get swap quote", returns: "Promise<Quote>" },
-      { name: "getSupportedPairs()", description: "List supported trading pairs", returns: "Promise<TradingPair[]>" },
+      { 
+        name: "execute(params)", 
+        description: "Execute token swap", 
+        params: "{ fromToken: string, toToken: string, amount: string, slippage?: number }",
+        returns: "Promise<{ hash: string, amountIn: string, amountOut: string, fee: string }>" 
+      },
+      { 
+        name: "getQuote(params)", 
+        description: "Get swap quote", 
+        params: "{ fromToken: string, toToken: string, amount: string }",
+        returns: "Promise<{ amountOut: string, priceImpact: number, fee: string }>" 
+      },
+      { 
+        name: "getSupportedPairs()", 
+        description: "List supported trading pairs", 
+        params: "none",
+        returns: "Promise<Array<{ base: string, quote: string, liquidity: string }>>" 
+      },
     ]
   }
 ];
@@ -296,16 +361,27 @@ export default function Developer() {
                   {category.methods.map((method, index) => (
                     <div
                       key={index}
-                      className="p-3 rounded-md bg-muted/30 hover-elevate"
+                      className="p-4 rounded-md bg-muted/30 hover-elevate space-y-2"
                       data-testid={`api-method-${category.category.toLowerCase()}-${index}`}
                     >
-                      <div className="flex items-start justify-between mb-1">
-                        <code className="text-sm font-mono font-semibold">{method.name}</code>
-                        <Badge variant="outline" className="text-xs">
-                          {method.returns}
-                        </Badge>
+                      <div className="flex items-start justify-between">
+                        <code className="text-sm font-mono font-semibold text-primary">{method.name}</code>
                       </div>
                       <p className="text-sm text-muted-foreground">{method.description}</p>
+                      <div className="space-y-1">
+                        <div className="text-xs">
+                          <span className="font-semibold text-foreground">Parameters:</span>
+                          <code className="ml-2 text-xs font-mono bg-muted px-2 py-0.5 rounded">
+                            {method.params}
+                          </code>
+                        </div>
+                        <div className="text-xs">
+                          <span className="font-semibold text-foreground">Returns:</span>
+                          <code className="ml-2 text-xs font-mono bg-muted px-2 py-0.5 rounded">
+                            {method.returns}
+                          </code>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
