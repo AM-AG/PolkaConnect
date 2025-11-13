@@ -17,7 +17,7 @@ Preferred communication style: Simple, everyday language.
 **State Management**: TanStack React Query for caching and server state.
 **UI Framework**: shadcn/ui built on Radix UI, styled with Tailwind CSS.
 **Design System**: Inter and JetBrains Mono fonts, HSL-based light/dark themes, 12-column responsive grid, card-based UI.
-**Key Pages**: Dashboard, Assets, Swap, Transfer (XCM-based DOT transfers), History, Community (leaderboard, activity feed, staking pools), Staking (with analytics & validator recommendations), Governance (with participation metrics), Network (with live XCM activity), Transactions (live feed).
+**Key Pages**: Dashboard, Assets, Swap, Transfer (XCM-based DOT transfers), History, Community (leaderboard, activity feed, staking pools), Staking (with analytics & validator recommendations), Governance (with participation metrics), Network (with live XCM activity), Transactions (live feed), Developer (SDK documentation and code examples).
 **Resilience**: LocalStorage caching with TTL, fallback to cached data, status banners, client-side data age tracking, null-safe rendering with fallback UI states.
 
 ### Backend Architecture
@@ -124,6 +124,12 @@ Preferred communication style: Simple, everyday language.
 ## Developer SDK
 
 **Cross-Chain SDK for External Developers** (November 2025):
+- **Developer Page** (`/developer`): Interactive documentation hub
+  - Language-specific tabs for JavaScript and Python code examples
+  - Copy-to-clipboard functionality for installation commands and code snippets
+  - Complete API reference with methods categorized by Wallet, Transfer, Governance, and Swap
+  - Links to documentation, GitHub repository, and example projects
+  - Badge system highlighting key features (TypeScript support, Type Hints, Async/Await)
 - **JavaScript/TypeScript SDK** (`sdk/js/`): NPM-ready package with TypeScript support
   - Modules: Wallet connection, swap operations, XCM transfers, governance voting
   - Type definitions included for full IDE support
@@ -133,4 +139,4 @@ Preferred communication style: Simple, everyday language.
   - Compatible with Python 3.7+
   - Installation via pip, comprehensive documentation
 - **Purpose**: Enable third-party developers to integrate PolkaConnect functionality into their own applications
-- **Status**: Scaffolding complete, ready for implementation and publication
+- **Status**: Developer page live with interactive documentation, SDK scaffolding complete and ready for implementation

@@ -10,6 +10,7 @@ import {
   Vote,
   Network,
   History,
+  Code2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -89,6 +90,15 @@ const polkadotItems = [
   },
 ];
 
+const developerItems = [
+  {
+    title: "Developer SDK",
+    url: "/developer",
+    icon: Code2,
+    testId: "link-developer",
+  },
+];
+
 export function AppSidebar() {
   const [location] = useLocation();
 
@@ -136,6 +146,32 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {polkadotItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link 
+                        href={item.url} 
+                        className="flex items-center gap-2"
+                        data-testid={item.testId}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Developer</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {developerItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location === item.url;
                 return (

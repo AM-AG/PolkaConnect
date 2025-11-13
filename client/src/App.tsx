@@ -18,6 +18,7 @@ import Governance from "@/pages/Governance";
 import Network from "@/pages/Network";
 import Staking from "@/pages/staking";
 import Transactions from "@/pages/transactions";
+import Developer from "@/pages/Developer";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/governance" component={Governance} />
       <Route path="/network" component={Network} />
       <Route path="/transactions" component={Transactions} />
+      <Route path="/developer" component={Developer} />
       <Route component={NotFound} />
     </Switch>
   );
