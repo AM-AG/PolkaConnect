@@ -13,6 +13,7 @@ import Assets from "@/pages/Assets";
 import Swap from "@/pages/swap";
 import Transfer from "@/pages/transfer";
 import History from "@/pages/history";
+import Community from "@/pages/community";
 import Governance from "@/pages/Governance";
 import Network from "@/pages/Network";
 import Staking from "@/pages/staking";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/swap" component={Swap} />
       <Route path="/transfer" component={Transfer} />
       <Route path="/history" component={History} />
+      <Route path="/community" component={Community} />
       <Route path="/staking" component={Staking} />
       <Route path="/governance" component={Governance} />
       <Route path="/network" component={Network} />

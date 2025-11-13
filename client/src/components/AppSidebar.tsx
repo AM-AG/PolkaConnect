@@ -5,6 +5,7 @@ import {
   ArrowLeftRight,
   Send,
   Clock,
+  Users2,
   Lock,
   Vote,
   Network,
@@ -52,6 +53,12 @@ const coreItems = [
     url: "/history",
     icon: Clock,
     testId: "link-history",
+  },
+  {
+    title: "Community",
+    url: "/community",
+    icon: Users2,
+    testId: "link-community",
   },
 ];
 

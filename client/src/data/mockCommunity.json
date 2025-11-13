@@ -1,0 +1,82 @@
+{
+  "leaderboard": [
+    {
+      "name": "Alice",
+      "address": "1a2b3c4d5e6f7g8h9i0j",
+      "score": 1200,
+      "badges": ["governance", "staking"],
+      "contributions": {
+        "votes": 45,
+        "stakes": 12,
+        "xcmTransfers": 8
+      }
+    },
+    {
+      "name": "Bob",
+      "address": "2f4a1d3e9c8b7a6f5e4d",
+      "score": 1120,
+      "badges": ["staking", "validator"],
+      "contributions": {
+        "votes": 38,
+        "stakes": 15,
+        "xcmTransfers": 5
+      }
+    },
+    {
+      "name": "Charlie",
+      "address": "9e8b7f1c3d5a2b4c6e8f",
+      "score": 1030,
+      "badges": ["governance"],
+      "contributions": {
+        "votes": 52,
+        "stakes": 8,
+        "xcmTransfers": 3
+      }
+    },
+    {
+      "name": "Diana",
+      "address": "3c5d7e9f1a2b4c6d8e0f",
+      "score": 980,
+      "badges": ["xcm", "staking"],
+      "contributions": {
+        "votes": 28,
+        "stakes": 10,
+        "xcmTransfers": 15
+      }
+    },
+    {
+      "name": "Eve",
+      "address": "7a9b1c3d5e7f9a1b3c5d",
+      "score": 920,
+      "badges": ["governance", "xcm"],
+      "contributions": {
+        "votes": 41,
+        "stakes": 7,
+        "xcmTransfers": 12
+      }
+    }
+  ],
+  "stakingPools": [
+    {
+      "id": "pool-1",
+      "name": "Community Validators",
+      "totalStaked": "145000",
+      "members": 342,
+      "apy": "12.5"
+    },
+    {
+      "id": "pool-2",
+      "name": "Polkadot Pioneers",
+      "totalStaked": "98500",
+      "members": 218,
+      "apy": "11.8"
+    },
+    {
+      "id": "pool-3",
+      "name": "Cross-Chain Alliance",
+      "totalStaked": "76200",
+      "members": 156,
+      "apy": "13.2"
+    }
+  ]
+}
