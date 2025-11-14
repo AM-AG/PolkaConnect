@@ -240,9 +240,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Award XP for voting
       await storage.incrementVoteCount(voteData.walletAddress, 10);
       
+      // Fetch complete governance summary with updated stats
+      const summary = await getGovernanceSummary(voteData.walletAddress);
+      
       res.json({ 
         success: true, 
-        data: vote 
+        data: {
+          vote,
+          summary
+        }
       });
     } catch (error) {
       console.error("Error creating vote:", error);

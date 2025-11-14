@@ -8,7 +8,7 @@ import { usePolkadotApi, TransactionStatus } from "@/contexts/PolkadotApiContext
 import { useWallet } from "@/contexts/WalletContext";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ThumbsUp, ThumbsDown } from "lucide-react";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { dotToPlanck } from "@/lib/polkadot";
 
 interface VoteDialogProps {
@@ -77,6 +77,8 @@ export function VoteDialog({ open, onOpenChange, proposalId, proposalTitle }: Vo
 
       const extrinsic = api.tx.convictionVoting.vote(proposalId, vote);
 
+      let isFinalized = false;
+
       const handleStatus = (txStatus: TransactionStatus) => {
         if (txStatus.type === "ready") {
           setStatus("Ready to sign...");
@@ -86,6 +88,7 @@ export function VoteDialog({ open, onOpenChange, proposalId, proposalTitle }: Vo
           setStatus("Vote included in block...");
         } else if (txStatus.type === "finalized") {
           setStatus("Vote finalized!");
+          isFinalized = true;
         } else if (txStatus.type === "error") {
           setStatus(`Error: ${txStatus.message}`);
         }
@@ -93,13 +96,52 @@ export function VoteDialog({ open, onOpenChange, proposalId, proposalTitle }: Vo
 
       const txHash = await signAndSend(extrinsic, handleStatus);
 
+      // Record the vote in the database after successful finalization
+      if (isFinalized) {
+        try {
+          const convictionMap: Record<Conviction, number> = {
+            "None": 0,
+            "Locked1x": 1,
+            "Locked2x": 2,
+            "Locked3x": 3,
+            "Locked4x": 4,
+            "Locked5x": 5,
+            "Locked6x": 6,
+          };
+
+          const response = await apiRequest("POST", "/api/governance/vote", {
+            referendumId: proposalId,
+            walletAddress: activePolkadotAccount.address,
+            vote: voteDirection,
+            conviction: convictionMap[conviction],
+            balance: voteBalance.toString(),
+          });
+
+          const result = await response.json();
+
+          if (result.success && result.data?.summary) {
+            console.log("Vote recorded in database");
+
+            // Update cache with complete governance summary from server
+            // This includes totals, trending proposals, and user participation
+            queryClient.setQueryData(
+              ["/api/governance/summary", activePolkadotAccount.address],
+              result.data.summary
+            );
+
+            // Invalidate proposals query to refresh proposal list
+            queryClient.invalidateQueries({ queryKey: ["/api/governance"] });
+          }
+        } catch (dbError) {
+          console.error("Failed to record vote in database:", dbError);
+          // Don't show error to user since blockchain vote succeeded
+        }
+      }
+
       toast({
         title: "Vote Submitted!",
         description: `Successfully voted ${voteDirection.toUpperCase()} on proposal #${proposalId}`,
       });
-
-      queryClient.invalidateQueries({ queryKey: ["/api/governance"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/governance/summary"] });
 
       setVoteDirection(null);
       setConviction("None");

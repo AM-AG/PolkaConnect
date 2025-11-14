@@ -54,6 +54,7 @@ export interface IStorage {
   
   // User XP
   getUserXp(walletAddress: string): Promise<UserXp | undefined>;
+  getAllUserXp(): Promise<UserXp[]>;
   createOrUpdateUserXp(xpData: InsertUserXp): Promise<UserXp>;
   incrementVoteCount(walletAddress: string, xpGain: number): Promise<UserXp>;
   incrementCommentCount(walletAddress: string, xpGain: number): Promise<UserXp>;
@@ -219,6 +220,11 @@ export class MemStorage implements IStorage {
   // User XP
   async getUserXp(walletAddress: string): Promise<UserXp | undefined> {
     return this.userXpMap.get(walletAddress);
+  }
+
+  async getAllUserXp(): Promise<UserXp[]> {
+    return Array.from(this.userXpMap.values())
+      .sort((a, b) => b.xp - a.xp);
   }
 
   async createOrUpdateUserXp(xpData: InsertUserXp): Promise<UserXp> {

@@ -2,27 +2,38 @@ import { MultiChainStats } from "@/components/MultiChainStats";
 import { CommunityStats } from "@/components/CommunityStats";
 import { BalanceCard } from "@/components/BalanceCard";
 import { ProposalCard } from "@/components/ProposalCard";
+import { VoteDialog } from "@/components/VoteDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useMultiWallet } from "@/hooks/useMultiWallet";
 import { useMultiChainBalances } from "@/hooks/useMultiChainBalances";
 import { useGovernance } from "@/hooks/useGovernance";
 import { useXcmData } from "@/hooks/useXcmData";
+import { useWallet } from "@/contexts/WalletContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wallet } from "lucide-react";
+import { useState } from "react";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const { walletState, isAnyConnected } = useMultiWallet();
+  const { activePolkadotAccount } = useWallet();
   const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useMultiChainBalances(walletState);
   const { data: proposals, isLoading: proposalsLoading } = useGovernance();
   const { data: xcmChannels } = useXcmData();
+  const [voteDialogOpen, setVoteDialogOpen] = useState(false);
+  const [selectedProposal, setSelectedProposal] = useState<{id: number; title: string} | null>(null);
 
-  const handleVote = (proposalId: number, vote: "aye" | "nay") => {
-    console.log(`Voted ${vote} on proposal ${proposalId}`);
-    toast({
-      title: "Vote Submitted",
-      description: `Your ${vote.toUpperCase()} vote has been recorded for proposal #${proposalId}`,
-    });
+  const handleVote = (proposalId: number, proposalTitle: string, voteDirection?: "aye" | "nay") => {
+    if (!activePolkadotAccount) {
+      toast({
+        variant: "destructive",
+        title: "Wallet Not Connected",
+        description: "Please connect your Polkadot wallet to vote",
+      });
+      return;
+    }
+    setSelectedProposal({ id: proposalId, title: proposalTitle });
+    setVoteDialogOpen(true);
   };
 
   const handleRefresh = (chainName: string) => {
@@ -122,7 +133,7 @@ export default function Dashboard() {
               <ProposalCard
                 key={proposal.id}
                 {...proposal}
-                onVote={(vote) => handleVote(proposal.id, vote)}
+                onVote={(voteDirection) => handleVote(proposal.id, proposal.title, voteDirection)}
               />
             ))}
           </div>
@@ -134,6 +145,15 @@ export default function Dashboard() {
           </Alert>
         )}
       </div>
+
+      {selectedProposal && (
+        <VoteDialog
+          open={voteDialogOpen}
+          onOpenChange={setVoteDialogOpen}
+          proposalId={selectedProposal.id}
+          proposalTitle={selectedProposal.title}
+        />
+      )}
     </div>
   );
 }
