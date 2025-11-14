@@ -22,7 +22,7 @@ export default function Governance() {
   const { data: proposals, isLoading } = useGovernance();
   const { data: summary, isLoading: summaryLoading } = useGovernanceSummary(activePolkadotAccount?.address);
 
-  const handleVoteClick = (proposalId: number, proposalTitle: string) => {
+  const handleVoteClick = (proposalId: number, proposalTitle: string, voteDirection?: "aye" | "nay") => {
     if (!activePolkadotAccount) {
       toast({
         variant: "destructive",
@@ -181,7 +181,7 @@ export default function Governance() {
                 <ProposalCard
                   key={proposal.id}
                   {...proposal}
-                  onVote={() => handleVoteClick(proposal.id, proposal.title)}
+                  onVote={(voteDirection) => handleVoteClick(proposal.id, proposal.title, voteDirection)}
                 />
               ))}
             </div>
@@ -218,7 +218,7 @@ export default function Governance() {
             <ProposalCard
               key={proposal.id}
               {...proposal}
-              onVote={() => handleVoteClick(proposal.id, proposal.title)}
+              onVote={(voteDirection) => handleVoteClick(proposal.id, proposal.title, voteDirection)}
             />
           ))}
         </div>
