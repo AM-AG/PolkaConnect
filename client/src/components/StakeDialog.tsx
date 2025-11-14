@@ -48,11 +48,7 @@ export function StakeDialog({ open, onOpenChange }: StakeDialogProps) {
     try {
       const amountInPlanck = dotToPlanck(amount);
 
-      const stashAccount = activePolkadotAccount.address;
-      const controllerAccount = activePolkadotAccount.address;
-
       const extrinsic = api.tx.staking.bond(
-        controllerAccount,
         amountInPlanck,
         "Staked"
       );
