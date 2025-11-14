@@ -11,20 +11,28 @@ import { useGovernance } from "@/hooks/useGovernance";
 import { useGovernanceSummary } from "@/hooks/useGovernanceSummary";
 import { useWallet } from "@/contexts/WalletContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { VoteDialog } from "@/components/VoteDialog";
 
 export default function Governance() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [voteDialogOpen, setVoteDialogOpen] = useState(false);
+  const [selectedProposal, setSelectedProposal] = useState<{id: number; title: string} | null>(null);
   const { toast } = useToast();
   const { activePolkadotAccount } = useWallet();
   const { data: proposals, isLoading } = useGovernance();
   const { data: summary, isLoading: summaryLoading } = useGovernanceSummary(activePolkadotAccount?.address);
 
-  const handleVote = (proposalId: number, vote: "aye" | "nay") => {
-    console.log(`Voted ${vote} on proposal ${proposalId}`);
-    toast({
-      title: "Vote Submitted",
-      description: `Your ${vote.toUpperCase()} vote has been recorded for proposal #${proposalId}`,
-    });
+  const handleVoteClick = (proposalId: number, proposalTitle: string) => {
+    if (!activePolkadotAccount) {
+      toast({
+        variant: "destructive",
+        title: "Wallet Not Connected",
+        description: "Please connect your Polkadot wallet to vote",
+      });
+      return;
+    }
+    setSelectedProposal({ id: proposalId, title: proposalTitle });
+    setVoteDialogOpen(true);
   };
 
   const filteredProposals =
@@ -173,7 +181,7 @@ export default function Governance() {
                 <ProposalCard
                   key={proposal.id}
                   {...proposal}
-                  onVote={(vote) => handleVote(proposal.id, vote)}
+                  onVote={() => handleVoteClick(proposal.id, proposal.title)}
                 />
               ))}
             </div>
@@ -210,7 +218,7 @@ export default function Governance() {
             <ProposalCard
               key={proposal.id}
               {...proposal}
-              onVote={(vote) => handleVote(proposal.id, vote)}
+              onVote={() => handleVoteClick(proposal.id, proposal.title)}
             />
           ))}
         </div>
@@ -222,6 +230,15 @@ export default function Governance() {
               : "No active proposals at the moment. Check back later for governance updates."}
           </AlertDescription>
         </Alert>
+      )}
+
+      {selectedProposal && (
+        <VoteDialog
+          open={voteDialogOpen}
+          onOpenChange={setVoteDialogOpen}
+          proposalId={selectedProposal.id}
+          proposalTitle={selectedProposal.title}
+        />
       )}
     </div>
   );

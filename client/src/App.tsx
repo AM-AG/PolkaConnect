@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MultiWalletConnect } from "@/components/MultiWalletConnect";
 import { WalletProvider } from "@/contexts/WalletContext";
+import { PolkadotApiProvider } from "@/contexts/PolkadotApiContext";
 import Dashboard from "@/pages/Dashboard";
 import Assets from "@/pages/Assets";
 import Swap from "@/pages/swap";
@@ -49,26 +50,28 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WalletProvider>
-        <TooltipProvider>
-          <SidebarProvider style={style as React.CSSProperties}>
-            <div className="flex h-screen w-full">
-              <AppSidebar />
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <header className="flex items-center justify-between p-4 border-b bg-card/50 backdrop-blur-sm">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <div className="flex items-center gap-2">
-                    <ThemeToggle />
-                    <MultiWalletConnect />
-                  </div>
-                </header>
-                <main className="flex-1 overflow-y-auto p-6">
-                  <Router />
-                </main>
+        <PolkadotApiProvider>
+          <TooltipProvider>
+            <SidebarProvider style={style as React.CSSProperties}>
+              <div className="flex h-screen w-full">
+                <AppSidebar />
+                <div className="flex flex-col flex-1 overflow-hidden">
+                  <header className="flex items-center justify-between p-4 border-b bg-card/50 backdrop-blur-sm">
+                    <SidebarTrigger data-testid="button-sidebar-toggle" />
+                    <div className="flex items-center gap-2">
+                      <ThemeToggle />
+                      <MultiWalletConnect />
+                    </div>
+                  </header>
+                  <main className="flex-1 overflow-y-auto p-6">
+                    <Router />
+                  </main>
+                </div>
               </div>
-            </div>
-          </SidebarProvider>
-          <Toaster />
-        </TooltipProvider>
+            </SidebarProvider>
+            <Toaster />
+          </TooltipProvider>
+        </PolkadotApiProvider>
       </WalletProvider>
     </QueryClientProvider>
   );

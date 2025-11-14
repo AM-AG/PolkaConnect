@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "@/contexts/WalletContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +8,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Lock, Unlock, TrendingUp, Award, Wallet, Calculator, Info, Star } from "lucide-react";
 import { useStakingAnalytics } from "@/hooks/useStakingAnalytics";
+import { StakeDialog } from "@/components/StakeDialog";
 import type { StakingInfo } from "@shared/schema";
 
 export default function Staking() {
   const { activePolkadotAccount } = useWallet();
   const address = activePolkadotAccount?.address;
+  const [isStakeDialogOpen, setIsStakeDialogOpen] = useState(false);
 
   const { data: stakingInfo, isLoading, error } = useQuery<StakingInfo>({
     queryKey: ["/api/staking", address],
@@ -23,10 +26,26 @@ export default function Staking() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" data-testid="text-page-title">Staking</h1>
-        <p className="text-muted-foreground">Manage your DOT staking and nominations</p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2" data-testid="text-page-title">Staking</h1>
+          <p className="text-muted-foreground">Manage your DOT staking and nominations</p>
+        </div>
+        {address && (
+          <Button 
+            onClick={() => setIsStakeDialogOpen(true)}
+            data-testid="button-stake-dot"
+          >
+            <Lock className="mr-2 h-4 w-4" />
+            Stake DOT
+          </Button>
+        )}
       </div>
+
+      <StakeDialog 
+        open={isStakeDialogOpen} 
+        onOpenChange={setIsStakeDialogOpen} 
+      />
 
       {/* Staking Analytics & Encouragement - Always visible */}
       <div className="grid gap-6 lg:grid-cols-2 mb-6">
